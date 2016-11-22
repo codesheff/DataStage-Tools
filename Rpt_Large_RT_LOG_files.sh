@@ -4,12 +4,13 @@
 vProject=dstage1
 vProjectDir=/opt/IBM/InformationServer/Server/Projects/dstage1
 vDSHOME=/opt/IBM/InformationServer/Server/DSEngine
+vNumberOfLogs=10
 
 
 
 ###############################################################################################
 vJobNoList=""
-for vLine in $( du -ks ${vProjectDir}/RT_LOG* | sort -nr | head -10 |  tr '\t ' ',' )
+for vLine in $( du -ks ${vProjectDir}/RT_LOG* | sort -nr | head -${vNumberOfLogs} |  tr '\t ' ',' )
 do
 
 
