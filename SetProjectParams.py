@@ -51,6 +51,32 @@ def LogMessage(text=''):
 
     import traceback
     import logging
+
+    # Set up logging 2x. One for logging to file, and one for logging to screen.
+    # You can control the logging level to each separately - and also at top level
+    
+    # log - general 
+    log = logging.getLogger('logger')
+    log.setLevel(logging.DEBUG)     #  this is initial filter. Messages have to be above this to get anywhere.
+
+    formatter = logging.Formatter('%(message)s')
+    
+    # fh - logging filehandler
+    fh = logging.FileHandler('/tmp/test.log', mode='w', encoding='utf-8')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    log.addHandler(fh)
+
+    # ch - logging streamhandler
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
+    
+
+    #logging.basicConfig(level=logging.INFO,filename='/tmp/app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    
     
    
     trace_b=traceback.extract_stack(limit=None)
@@ -67,7 +93,12 @@ def LogMessage(text=''):
         funcs.append(trace_b[i][2])  
 
     print(funcs)
-    logging.info
+    print('And now for some logging...')
+    
+    log.info('This is info')
+    log.warn('This is a warning')
+    log.error('This is an error')
+    log.debug('This is a debug')
 
 
 
