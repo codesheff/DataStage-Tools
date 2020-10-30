@@ -47,10 +47,12 @@ def GetProjectParamConfig():
 
     return projectParamConfig
 
-def LogMessage(text=''):
+def GetLogger():
 
-    import traceback
+    
     import logging
+
+    ##Maybe this should be a class really. Something I set up once at start of script, rather than reimporting every time we log a message.
 
     # Set up logging 2x. One for logging to file, and one for logging to screen.
     # You can control the logging level to each separately - and also at top level
@@ -59,7 +61,7 @@ def LogMessage(text=''):
     log = logging.getLogger('logger')
     log.setLevel(logging.DEBUG)     #  this is initial filter. Messages have to be above this to get anywhere.
 
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s  ( from %(filename)s -> %(module)s) -> %(funcName)s')
     
     # fh - logging filehandler
     fh = logging.FileHandler('/tmp/test.log', mode='w', encoding='utf-8')
@@ -75,30 +77,27 @@ def LogMessage(text=''):
 
     
 
-    #logging.basicConfig(level=logging.INFO,filename='/tmp/app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    #If I did want to use traceback to get funtion names I could do something like this
+    ## But I might need to set up a class for this.
     
     
-   
+    import traceback
     trace_b=traceback.extract_stack(limit=None)
     
     
     # Loop backwards through stack , to get function names
     funcs=[]
     for i in range( len(trace_b) - 1, -1, -1):
-        
-        ## If we hit '<module>', then stop. I assume this is as far as we need to go.
+    #    
+    #    ## If we hit '<module>', then stop. I assume this is as far as we need to go.
         if trace_b[i][2] == '<module>':
             break
-
+    #
         funcs.append(trace_b[i][2])  
 
-    print(funcs)
-    print('And now for some logging...')
-    
-    log.info('This is info')
-    log.warn('This is a warning')
-    log.error('This is an error')
-    log.debug('This is a debug')
+    return log
+
+
 
 
 
@@ -106,7 +105,26 @@ def GetDSParamValues(filePath=''):
     """
     Get values from a DSParam file and load them to a format we can process
     """
-    LogMessage('hello')
+    
+    ## Trying to set it up so it uses same object if it already exists
+    #logMessage=SetUpLog()
+    # If I just set it up in main script it works.
+    # Am I going to have to put this try block in every function that uses logging?
+    # Maybe just better to just import my LogMessages class each time and create as new local object.
+
+    try:
+        logMessage.debug('Entered function GetDSParamValues')
+    except:
+        logMessage=LogMessage()
+        logMessage.debug('Entered function GetDSParamValues')
+
+    def SubFun1():
+        pass
+        logMessage.info('We are now in GetDSParamValues. ')
+
+    
+    SubFun1()
+
 
 
 
@@ -130,18 +148,57 @@ def HandleInputParameters():
     #args = parser.parse_args()
     return parser
 
+class LogMessage():
+    def __init__(self):
+        #print('Initialising a LogMessage object.')
+        self.log=GetLogger()
+    
+    def __getFunctionNames(self):
+        import traceback
+        trace_b=traceback.extract_stack(limit=None)
+        
+        # Loop backwards through stack , to get function names
+        funcs=[]
+        for i in range( len(trace_b) - 1, -1, -1):
+            # If we hit '<module>', then stop. I assume this is as far as we need to go.
+            if trace_b[i][2] == '<module>':
+                break
+            funcs.append(trace_b[i][2])  
+
+        return(str(funcs))
+
+    def info(self, message):
+        """
+        This method is to log info
+        """
+        self.log.info(message + self.__getFunctionNames())
+    
+    def debug(self, message):
+        """
+        This method is to log info
+        """
+        self.log.debug(message + self.__getFunctionNames())
+
 
 
 ##  Main line
+logMessage=LogMessage()
 parser=HandleInputParameters()
 args = parser.parse_args()
 
-print('logfile is :' + args.logfile )
-print('install_base is :' + args.install_base )
-print('template_dsparam is :' + args.template_dsparam )
+logMessage.info('logfile is :' + args.logfile)
+logMessage.info('install_base is :' + args.install_base )
+logMessage.info('template_dsparam is :' + args.template_dsparam )
 
 projectParamConfig=GetProjectParamConfig()
 #print(projectParamConfig)
+
+
+
+logMessage=LogMessage()
+#logMessage=SetUpLog()
+
+#logMessage.info('info message')
 
 GetDSParamValues(args.template_dsparam)
 
