@@ -1,0 +1,463 @@
+/* Project-wide setup parameters
+/* Each section is introduced by [name]
+/*
+/* The [functions] section contains lines defining which functions
+/* are displayed in the Transform editor dialogs automatically.
+/* These apply to both server and parallel jobs.
+/* Each line consists of: FunctionName\NumberOfArgs [ - MaxNumberOfArgs ]\Description\FunctionCategory\returntype\argtype:argdesc,...\alt_call_name,alt_u_call_name\HiddenFromGUILists
+/*
+/* The FunctionCategory field can be separated by '!' symbols to specify category hierarchies if required.
+[functions]
+Abs\1\Absolute value of any numeric expression\Mathematical\int32\int32:number\abs
+Acos\1\Calculates the trigonometric arc-cosine of an expression\Mathematical\dfloat\dfloat:number\acos
+Alpha\1\Returns 1 if string is purely alphabetic\String\int8\anystring:string\is_alpha,u_is_alpha
+Asin\1\Calculates the trigonometric arc-sine of an expression\Mathematical\dfloat\dfloat:number\asin
+Atan\1\Calculates the trigonometric arc-tangent of an expression\Mathematical\dfloat\dfloat:number\atan
+Change\3-5\Substitutes an element of a string with a replacement element (string, substring, replacement [,occurrence[,begin]])\String\anystring\anystring:string,anystring:substring,anystring:replacement,int32:occurrence,int32:begin\change_string,u_change_string
+Compare\2-3\Compares two strings for sorting (string1, string2 [,justification])\String\int32\anystring:string1,anystring:string2,string:justification\string_order_compare,u_string_order_compare
+Convert\3\Converts specified characters in a string to designated replacement characters (fromlist, tolist, expression)\String\anystring\anystring:fromlist,anystring:tolist,anystring:expression\replace_substring,u_replace_substring
+Cos\1\Calculates the trigonometric cosine of an expression\Mathematical\dfloat\dfloat:number\cos
+Cosh\1\Calculates the hyperbolic cosine of an expression\Mathematical\dfloat\dfloat:number\cosh
+Count\2\Count number of times a substring occurs in a string (string, substring)\String\int32\anystring:string,anystring:substring\count_substring,u_count_substring
+Dcount\2\Count number of delimited fields in a string (string, delimiter)\String\int32\anystring:string,anystring:delimiter\dcount_substring,u_dcount_substring
+Div\2\Outputs the whole part of the real division of two real numbers (dividend, divisor)\Mathematical\dfloat\dfloat:dividend,dfloat:divisor\quotient_from_dfloat
+DownCase\1\Change all uppercase letters in a string to lowercase\String\anystring\anystring:string\lower_case,u_lower_case
+DQuote\1\Enclose a string in double quotation marks\String\anystring\anystring:string\double_quote_string,u_double_quote_string
+Ereplace\3-5\Replace substring of string (string, substring, replacement[, occurrence[, begin]])\String\anystring\anystring:string,anystring:substring,anystring:replacement,int32:occurrence,int32:begin\ereplace_string,u_ereplace_string
+Exp\1\Calculates the result of base 'e' raised to the power designated by the value of the expression\Mathematical\dfloat\dfloat:number\exp
+Field\3-4\Return 1 or more delimited substrings (string, delimiter, occurrence, [number])\String\anystring\anystring:string,anystring:delimiter,int32:occurrence,int32:number\substring_by_delimiter,u_substring_by_delimiter
+Index\3\Find starting character position of substring (string, substring, occurrence)\String\int32\anystring:string,anystring:substring,int32:occurrence\index_of_substring_basic,u_index_of_substring_basic
+IsNull\1\Returns true when an expression evaluates to the null value\Null Handling\int8\any:value\null
+Left\2\Leftmost n characters of string (string, n)\String\anystring\anystring:string,int32:length\left_substring,u_left_substring
+Len\1\Length of string in characters\String\int32\anystring:string\string_length,u_string_length
+Ln\1\Calculates the natural logarithm of an expression in base 'e'\Mathematical\dfloat\dfloat:number\log
+Mod\2\Calculates the modulo (the remainder) of two expressions (dividend, divisor)\Mathematical\int32\int32:dividend,int32:divisor\mod
+Neg\1\Negate a number\Mathematical\dfloat\dfloat:number\neg
+Not\1\Returns the complement of the logical value of an expression\Logical\int8\int32:expression\not
+Num\1\Return 1 if string can be converted to a number\String\int8\anystring:string\is_numeric,u_is_numeric
+Pwr\2\Calculates the value of an expression when raised to a specified power (expression, power)\Mathematical\dfloat\dfloat:expression,dfloat:power\pow
+Right\2\Rightmost n characters of string (string, n)\String\anystring\anystring:string,int32:length\right_substring,u_right_substring
+Sin\1\Calculates the trigonometric sine of an angle\Mathematical\dfloat\dfloat:number\sin
+Sinh\1\Calculates the hyperbolic sine of an expression\Mathematical\dfloat\dfloat:number\sinh
+Space\1\Return a string of N space characters\String\anystring\int32:length\string_of_space,u_string_of_space
+Sqrt\1\Calculates the square root of a number\Mathematical\dfloat\dfloat:number\sqrt
+Squote\1\Enclose a string in single quotation marks\String\anystring\anystring:string\single_quote_string,u_single_quote_string
+Str\2\Repeat a string (string, repeats)\String\anystring\anystring:string,int32:repeats\string_of_substring,u_string_of_substring
+Tan\1\Calculates the trigonometric tangent of an angle\Mathematical\dfloat\dfloat:number\tan
+Tanh\1\Calculates the hyperbolic tangent of an expression\Mathematical\dfloat\dfloat:number\tanh
+TimeDate\0\Returns the time and date as a formatted string\Date & Time\anystring\\system_time_date,u_system_time_date
+Trim\1-3\Remove all leading and trailing spaces and tabs plus reduce internal occurrences to one\String\anystring\anystring:string,anystring:stripchar,string:option\trimc_string,u_trimc_string
+TrimB\1\Remove all trailing spaces and tabs\String\anystring\anystring:string\trim_trailing,u_trim_trailing
+TrimF\1\Remove all leading spaces and tabs\String\anystring\anystring:string\trim_leading,u_trim_leading
+UpCase\1\Change all lowercase letters in a string to uppercase\String\anystring\anystring:string\upper_case,u_upper_case
+/*
+/* The [serveronly-functions] section contains lines defining more (BASIC) functions
+/* for the Transform editor dialogs that are only available to server jobs. 
+/* The line format is the same as for the [functions] section
+/*
+[serveronly-functions]
+Ascii\1\EBCDIC to ASCII string conversion\Conversion\\:string
+Cats\2\Concatenate 2 strings (string1, string2)\String\\:string1,:string2
+Char\1\ASCII character from numeric value\Conversion\anystring\:number
+Checksum\1\Returns a cyclical redundancy code (a checksum value)\Conversion\\:string
+CRC32\1\\Conversion\\:string
+Date\0\Returns the internal system date\Date & Time
+Dtx\1-2\Converts a decimal integer into its hexadecimal equivalent (number [,minsize] )\Conversion\\:number,:minsize
+Ebcdic\1\ASCII to EBCDIC stringConversion\Conversion\\:string
+Exchange\3\Replaces one character with another or deletes all occurrences of a specific character (string, hexchartoreplace, hexreplacementchar)\String\\:string,:hexchartoreplace,:hexreplacementchar
+Extract\2-4\Extracts the contents of a specified field, value, or subvalue from a dynamic array (dynamic.array, field# [,value# [,subvalue#]])\String\\:dynamicarray,:fieldnum,:valuenum,:subvaluenum
+FieldStore\5\Insert, delete or replace delimited fields (string, delimiter, start, n, newstring)\String\\:string,:delimiter,:start,:n,:newstring
+Fix\1-3\Convert a numeric value to a floating-point number with a specified precision (number [,precision [,mode]])\Number\\:number,:precision,:mode
+Fmt\2\Format a string (string, format)\String\\:string,:format
+FmtDP\3\Format a string in display positions (string, format, mapname)\String\\:string,:format,:mapname
+Fold\2\Divides a string into a number of shorter sections (string, length)\String\\:string,:length
+FoldDP\2-3\Divides a string into a number of substrings in display positions rather than character lengths (string, length [, mapname])\String\\:string,:length,:mapname
+Iconv\2\Convert a string to internal form (string,Conversion)\Conversion\\:string,:conversion
+Int\1\Integer portion of a number\Number\\:number
+LenDP\2\Length of string in display positions (string, mapname)\String\\:string,:mapname
+MatchField\3\Return part of string that matches pattern (string, pattern, field)\String\\:string,:pattern,:field
+Oconv\2\Convert a string to external form (string,Conversion)\Conversion\\:string,:conversion
+Real\1\Converts a numeric expression into a real number without loss of accuracy\Number\\:number
+Remove\2\Extract and return dynamic array elements separated by system delimiters\String\\:string,:delimiter
+Rnd\1\Generate a random number from 0 to arg-1\Mathematical\\:number
+Seq\1\ASCII numeric value of character\Conversion\int32\anystring:character
+Soundex\1\Returns the soundex code for a string\Conversion\\:string
+Status\0\Returns the current internal status code\System\\:number
+Substrings\3\Substring a string (string, start, length)\String\\:string,:start,:length
+Time\0\Returns the current wall-clock time in internal format\Date & Time
+UniChar\1\UNICODE character from numeric value\Conversion\\:number
+UniSeq\1\UNICODE numeric value of character\Conversion\\:character
+Xtd\1\Converts a hexadecimal string into its decimal equivalent\Conversion\\:string
+/*
+/* The [parallelonly-functions] section contains lines defining more functions
+/* for the Transform editor dialogs that are only available to parallel jobs.
+/* The line format is the same as for the [functions] section
+/*
+[parallelonly-functions]
+AlNum\1\Return whether the given string consists of alphanumeric characters\String\int8\anystring:string\is_alnum,u_is_alnum
+Ascii\1\EBCDIC to ASCII string conversion\String\anystring\anystring:string\ascii_from_ebcdic
+AsDouble\1\Return the given argument as a double\Number\dfloat\any:number\asdouble
+AsFloat\1\Return the given argument as a float\Number\sfloat\any:number\asfloat
+AsInteger\1\Return the given argument as an integer\Number\int64\any:number\asinteger
+Atan2\2\Calculates the trigonometric arc-tangent of arg1/arg2\Mathematical\dfloat\dfloat:number,dfloat:number\atan2
+BitAnd\2\Bitwise AND of two integers\Logical\uint64\uint64:integer,uint64:integer\bitand
+BitExpand\1\Convert the given integer into a string representation\Logical\string\uint64:bitfield\bit_expand
+BitCompress\1\Convert the given string bit representation (1 and 0s) into an integer\Logical\uint64\string:binarystring\bit_compress
+BitOr\2\Bitwise OR of two integers\Logical\uint64\uint64:integer,uint64:integer\bitor
+BitXOr\2\Bitwise exclusive OR of two integers\Logical\uint64\uint64:integer,uint64:integer\bitxor
+Ceil\1\Calculates the smallest integer value greater than or equal to the given decimal value\Mathematical\int32\dfloat:number\ceil
+Char\1-2\ASCII character from numeric value\Type Conversion\anystring\int32:number,uint8:allow8bits\char_from_num,u_char_from_num
+Checksum\1\Returns a cyclical redundancy code (a checksum value)\String\uint32\anystring:string\checksum_crc32
+CRC32\1\Returns a cyclical redundancy code (a checksum value)\String\uint32\anystring:string\checksum_crc32
+CompactWhiteSpace\1\Return the string after reducing all consective whitespace to a single space\String\anystring\anystring:string\compact_whitespace,u_compact_whitespace
+CompareNoCase\2\Case insensitive comparison of two strings\String\int8\anystring:string1,anystring:string2\string_case_compare,u_string_case_compare
+CompareNum\3\Compare the first n characters of the two strings\String\int8\anystring:string1,anystring:string2,int16:length\string_num_compare,u_string_num_compare
+CompareNumNoCase\3\Caseless comparison of the first n characters of the two strings\String\int8\anystring:string1,anystring:string2,int16:length\string_num_case_compare,u_string_num_case_compare
+Conversion\3\Perform string conversions in the style of Iconv or Oconv (string, conversioncode, conversionmode ["I" or "E"] )\String\anystring\anystring:sourcestring,anystring:convchars,anystring:convmode\conversion,u_conversion
+CurrentDate\0\Return the current date\Date & Time\date\\current_date
+CurrentTime\0\Return the current time\Date & Time\time\\current_time
+CurrentTimeMS\0\Return the current time including microseconds\Date & Time\time\\current_time
+CurrentTimestamp\0\Return the current timestamp\Date & Time\timestamp\\current_timestamp
+CurrentTimestampMS\0\Return the current timestamp including microseconds\Date & Time\timestamp\\current_timestamp
+DateFromComponents\3\Returns a date object representing the specified year, month and day\Date & Time\date\int32:years,int32:months,int32:days\date_from_components
+DateFromDaysSince\2\Returns a date by adding an integer to a baseline date\Date & Time\date\int32:number,string:"yyyy-mm-dd"\date_from_days_since
+DateFromDaysSince2\2\Returns a date by adding an integer to a baseline date\Date & Time\date\int32:number,date\date_from_days_since2
+DateFromJulianDay\1\Returns a date from the given julian date\Date & Time\date\uint32:juliandate\date_from_julian_day
+DateOffsetByComponents\4\Returns the given date, offset by the given components of years, months and days\Date & Time\date\date:basedate,int32:yearoffset,int32:monthoffset,int32:dayoffset\date_offset_by_components
+DateOffsetByDays\2\Returns the given date, offset by the number of days specified\Date & Time\date\date:basedate,int32:offset\date_offset_by_days
+DateToDecimal\1-2\Returns the given date as a packed decimal, with optional format string\Type Conversion\decimal\date:date,string:"%yyyy%mm%dd"\decimal_from_date
+DateToString\1-2\Return the string representation of the given date\Type Conversion\anystring\date,string:"%yyyy-%mm-%dd"\string_from_date,ustring_from_date
+DaysInMonth\1\Returns the number of days in the month of the given date\Date & Time\int32\date\date_days_in_month
+DaysInYear\1\Returns the number of days in the year of the given date\Date & Time\int32\date\date_days_in_year
+DaysSinceFromDate\2\Returns the number of days from source date to the given date\Date & Time\int32\date,string:"yyyy-mm-dd"\days_since_from_date
+DaysSinceFromDate2\2\Returns the number of days from source date to the given date\Date & Time\int32\date,date\days_since_from_date2
+DecimalToDate\1-2\Returns the given packed decimal as a date, with optional format string\Type Conversion\date\decimal:decimal,string:"%yyyy%mm%dd"\date_from_decimal
+DecimalToDecimal\1-2\Returns the given decimal in decimal representation with specified precision and scale\Type Conversion\decimal\decimal:decimal,string:rounding\decimal_from_decimal
+DecimalToDFloat\1-2\Returns the given decimal in dfloat representation\Type Conversion\dfloat\decimal:number,string:"fix_zero"\dfloat_from_decimal
+DecimalToString\1-2\Return the string representation of the given decimal\Type Conversion\anystring\decimal:number,string:"[fix_zero][#Csuppress_zero]"\string_from_decimal,ustring_from_decimal
+DecimalToTime\1-2\Returns the given packed decimal as a time, with optional format string\Type Conversion\time\decimal:decimal,string:"%hh%nn%ss"\time_from_decimal
+DecimalToTimestamp\1-2\Returns the given packed decimal as a timestamp, with optional format string\Type Conversion\timestamp\decimal:decimal,string:"%yyyy%mm%dd%hh%nn%ss"\timestamp_from_decimal
+DFloatToDecimal\1-2\Returns the given dfloat in decimal representation\Type Conversion\decimal\dfloat:number,string:rtype\decimal_from_dfloat
+DFloatToStringNoExp\2\Convert the given float to a string with no exponent\Type Conversion\anystring\dfloat:number,string:scale\string_from_dfloat_noexp,ustring_from_dfloat_noexp
+Dtx\1-2\Converts a decimal integer into its hexadecimal equivalent\Conversion\string\string:decimalvalue,string:optionalsize\decimal_hexadecimal
+Ebcdic\1\ASCII to EBCDIC string conversion\String\anystring\anystring:string\ebcdic_from_ascii
+ElementAt\2\Return a specific element of a vector column\Vector\any\any:vectorfield,int64:index\elementat
+Fabs\1\Calculates the absolute value of the given value\Mathematical\dfloat\dfloat:number\fabs
+Floor\1\Calculates the largest integer value less than or equal to the given decimal value\Mathematical\int32\dfloat:number\floor
+Fix\1-3\Convert a numeric value to a floating-point number with a specified precision (number [,precision [,mode]])\Number\decimal\decimal:number,int32:precision,int32:mode\Fix
+GetEnvironment\1\Return the vaue of the given environment variable\Utility\anystring\anystring:envvar\get_environment,u_get_environment
+GetSavedInputRecord\0\Make the next saved input record current and return the number of this saved input record\Utility\int32\\get_record
+HoursFromTime\1\Return the hour portion of a time\Date & Time\int8\time\hours_from_time
+Iconv\2\Perform string conversions in the style of Iconv or Oconv (string, conversioncode, conversionmode ["I" or "E"] )\String\string\string:sourcestring,string:convchars\internal_conversion
+IsNotNull\1\Returns true when an expression does not evaluate to the null value\Null Handling\int8\any:value\notnull
+IsValid\2-3\Return whether the given string is valid for the given type\Type Conversion\int8\string:typestring,anystring:valuestring,anystring:format\is_valid,u_is_valid
+IsValidDate\1\Return whether the given date is valid\Type Conversion\int8\date\date_is_valid
+IsValidTime\1\Return whether the given time is valid\Type Conversion\int8\time\time_is_valid
+IsValidTimestamp\1\Return whether the given timestamp is valid\Type Conversion\int8\timestamp\timestamp_is_valid
+IsValidDecimal\1-2\Return whether the given decimal is valid\Type Conversion\int8\decimal,uint8:allzerosisvalid\decimal_is_valid
+JulianDayFromDate\1\Returns julian day from the given date\Date & Time\int32\date\julian_day_from_date
+LastRow\0\Returns true when the current input row is the last input row\Last Row Handling\int8\\is_eow
+LastRowInGroup\1\Return whether the value of the given column will change in the next row\Last Row Handling\int8\any:inputcol\is_key_break
+Ldexp\2\Calculates a number from an exponent and mantissa\Mathematical\dfloat\dfloat:mantissa,int32:exponent\ldexp
+Llabs\1\Returns the absolute value of the given integer\Mathematical\uint64\int64:number\llabs
+Log10\1\Returns the log to the base 10 of the given value\Mathematical\dfloat\dfloat:number\log10
+MantissaFromDecimal\1\Returns the mantissa from the given decimal\Number\dfloat\decimal:number\mantissa_from_decimal
+MantissaFromDFloat\1\Returns the mantissa from the given dfloat\Number\dfloat\dfloat:number\mantissa_from_dfloat
+Max\2\Returns the greater of the two argument values\Mathematical\int32\int32:number1,int32:number2\max
+MicroSecondsFromTime\1\Returns the microsecond portion from a time\Date & Time\int32\time\microseconds_from_time
+MidnightSecondsFromTime\1\Returns the number of seconds from midnight to the given time\Date & Time\dfloat\time\midnight_seconds_from_time
+Min\2\Returns the lower of the two argument values\Mathematical\int32\int32:number1,int32:number2\min
+MinutesFromTime\1\Returns the minute portion from a time\Date & Time\int8\time\minutes_from_time
+MonthDayFromDate\1\Returns the day of the month given the date\Date & Time\int8\date\month_day_from_date
+MonthFromDate\1\Returns the month number given the date\Date & Time\int8\date\month_from_date
+NextSurrogateKey\0\Returns the next surrogate key integer value from the surrogate key state\Utility\int32\\surrogatekey_generate	
+NextSKChain\1\Returns the next surrogate key chain integer value\Utility\int32\int32:end_of_chain_value\next_skchain
+NextWeekdayFromDate\2\Returns the date of the specified day of the week soonest after the source date\Date & Time\date\date:sourcedate,string:dayname\next_weekday_from_date
+NthWeekdayFromDate\3\Return the date which lies on the specified weekday offset from the baseline date\Date & Time\date\date:sourcedate,string:dayname,int32:offset\nth_weekday_from_date
+NullToEmpty\1\Return either the given field, if not null, or an empty string if it is\Null Handling\any\any:inputcol\#define IF IsNotNull(%inputcol%) THEN %inputcol% ELSE ""
+NullToValue\2\Return either the given field, if not null, or the given value if it is\Null Handling\any\any:inputcol,any:value\#define IF IsNotNull(%inputcol%) THEN %inputcol% ELSE %value%
+NullToZero\1\Return either the given field, if not null, or zero if it is\Null Handling\any\any:inputcol\#define IF IsNotNull(%inputcol%) THEN %inputcol% ELSE 0
+Oconv\2\Perform string conversions in the style of Iconv or Oconv (string, conversioncode, conversionmode ["I" or "E"] )\String\string\string:sourcestring,string:convchars\external_conversion
+PadString\3\Return the string padded with the specified pad character and specified length\String\anystring\anystring:string,anystring:padstring,int32:padlength\pad_string,u_pad_string
+PreviousWeekdayFromDate\2\Returns the date of the specified day of the week most recent before the source date\Date & Time\date\date:sourcedate,string:dayname\previous_weekday_from_date
+PrevSKChain\1\Returns the previous surrogate key chain integer value\Utility\int32\int32:end_of_chain_value\prev_skchain
+Rand\0\Return a psuedo random integer between 0 and 2^32-1\Mathematical\uint32\\rand
+Random\0\Returns a random number between 0 2^32-1\Mathematical\uint32\\random
+Range\5\Range Lookup (Hidden from GUI lists)\Lookup\anystring\any:inputcol,anystring:string,any:inputcol,anystring:string,anystring:string\range\1
+RawLength\1\Returns the length of a raw string\Raw\int32\raw\raw_length
+RawNumAt\2\Returns the integer value at the position of the given raw value\Type Conversion\int32\raw,int32:position\raw_num_at
+RawToString\1\Returns a string from the given raw value\Type Conversion\string\raw\string_from_raw
+Real\1\Return the given argument as a double\Number\dfloat\any:number\asdouble
+SaveInputRecord\0\Saves the current input record and returns the count of saved input records\Utility\int32\\save_record
+SecondsFromTime\1\Returns the second portion from a time\Date & Time\dfloat\time\seconds_from_time
+SecondsSinceFromTimestamp\2\Returns the number of seconds between two timestamps\Date & Time\dfloat\timestamp,string:"yyyy-mm-dd hh:nn:ss"\seconds_since_from_timestamp
+SecondsSinceFromTimestamp2\2\Returns the number of seconds between two timestamps\Date & Time\dfloat\timestamp,timestamp\seconds_since_from_timestamp2
+Seq\1\ASCII numeric value of character\Type Conversion\int32\anystring:character\num_from_char,u_num_from_char
+SeqAt\2\ASCII numeric value of the character at the given position in the given string\Type Conversion\int32\anystring:string,int32:index\string_num_at,u_string_num_at
+SetBit\3\Sets bits on or off in a specified field\Logical\uint64\uint64:bitfield,string:bitliststring,uint8:bitstate\set_bit
+SetNull\0\Assign a null value to the target field\Null Handling\any\\set_null
+StringToDate\1-2\Returns a date from the given string in the given format\Type Conversion\date\anystring:datestring,string:"%yyyy-%mm-%dd"\date_from_string,date_from_ustring
+StringToDecimal\1-2\Returns the given string in decimal representation\Type Conversion\decimal\anystring:string,string:rtype\decimal_from_string,decimal_from_ustring
+StringToRaw\1\Returns a string in raw representation\Type Conversion\raw\anystring:string\raw_from_string,raw_from_ustring
+StringToTime\1-2\Returns a time representation of the given string\Type Conversion\time\anystring:string,string:"%hh:%nn:%ss"\time_from_string,time_from_ustring
+StringToTimestamp\1-2\Returns a timestamp representation of the given string\Type Conversion\timestamp\anystring:string,string:"%yyyy-%mm-%dd %hh:%nn:%ss"\timestamp_from_string,timestamp_from_ustring
+StringToUString\1-2\Return the ustring representation of the given string, with optional map\Type Conversion\ustring\string,string:mapname\ustring_from_string
+Soundex\1\Return the soundex code for a string\String\string\string:string\soundex
+StripWhiteSpace\1\Return the string after stripping all whitespace from a string\String\anystring\anystring:string\strip_whitespace,u_strip_whitespace
+TimeFromComponents\4\Returns a time object representing the specified hour, minutes, seconds and microseconds\Date & Time\time\int32:hours,int32:minutes,int32:seconds,int32:microseconds\time_from_components
+TimeFromMidnightSeconds\1\Returns the time given the number of seconds since midnight\Date & Time\time\dfloat:seconds\time_from_midnight_seconds
+TimeOffsetByComponents\4\Returns the given time, offset by the given components of hours, minutes and seconds\Date & Time\time\time:basetime,int32:houroffset,int32:minuteoffset,dfloat:secondoffset\time_offset_by_components
+TimeOffsetBySeconds\2\Returns the given time, offset by the number of seconds or part seconds specified\Date & Time\time\time:basetime,dfloat:offset\time_offset_by_seconds
+TimestampFromDateTime\2\Returns a timestamp from the given date and time\Date & Time\timestamp\date,time\timestamp_from_date_time
+TimestampFromSecondsSince\2\Return the timestamp from the number of seconds from the base timestamp\Date & Time\timestamp\dfloat:seconds,string:timestamp\timestamp_from_seconds_since
+TimestampFromSecondsSince2\2\Return the timestamp from the number of seconds from the base timestamp\Date & Time\timestamp\dfloat:seconds,timestamp\timestamp_from_seconds_since2
+TimestampFromTime2\2\Returns a timestamp with the date from the specified timestamp argument and the time from the specified time argument\Date & Time\timestamp\time,timestamp\timestamp_from_time2
+TimestampFromTimet\1\Returns a timestamp from the given unix time_t value\Date & Time\timestamp\int64:timetvalue\timestamp_from_timet
+TimestampOffsetByComponents\7\Returns the given timestamp, offset by the given components of years, months, days, hours, minutes and seconds\Date & Time\timestamp\timestamp:basetimestamp,int32:yearoffset,int32:monthoffset,int32:dayoffset,int32:houroffset,int32:minuteoffset,dfloat:secondoffset\timestamp_offset_by_components
+TimestampOffsetBySeconds\2\Returns the given timestamp, offset by the number of seconds or part seconds specified\Date & Time\timestamp\timestamp:basetimestamp,dfloat:offset\timestamp_offset_by_seconds
+TimestampToDate\1\Returns a date from the given timestamp\Type Conversion\date\timestamp\date_from_timestamp
+TimestampToDecimal\1-2\Returns the given timestamp as a packed decimal, with optional format string\Type Conversion\decimal\timestamp:timestamp,string:"%yyyy%mm%dd%hh%nn%ss"\decimal_from_timestamp
+TimestampToString\1-2\Return the string representation of the given timestamp\Type Conversion\anystring\timestamp,string:"%yyyy-%mm-%dd %hh:%nn:%ss"\string_from_timestamp,ustring_from_timestamp
+TimestampToTime\1\Returns the time from a given timestamp\Type Conversion\time\timestamp\time_from_timestamp
+TimetFromTimestamp\1\Returns a unix time_t value from the given timestamp\Date & Time\int64\timestamp\timet_from_timestamp
+TimeToDecimal\1-2\Returns the given time as a packed decimal, with optional format string\Type Conversion\decimal\time:time,string:"%hh%nn%ss"\decimal_from_time
+TimeToString\1-2\Return the string representation of the given time\Type Conversion\anystring\time,string:"%hh:%nn:%ss"\string_from_time,ustring_from_time
+TrimLeadingTrailing\1\Returns a string with leading and trailing whitespace removed\String\anystring\anystring:string\trim_leading_trailing,u_trim_leading_trailing
+UniChar\1\UNICODE character from numeric value\Conversion\ustring\int32:number\u_char_from_num
+UniSeq\1\UNICODE numeric value of character\Conversion\int32\ustring:character\u_num_from_char
+UStringToString\1-2\Return the string representation of the given ustring, with optional map\Type Conversion\string\ustring,string:mapname\string_from_ustring
+WeekdayFromDate\1-2\Returns the day of the week from the given date\Date & Time\int8\date,string:startdayname\weekday_from_date
+Xtd\1\Converts a hexadecimal string into its decimal equivalent\Conversion\string\string:inputstring\hexadecimal_decimal
+YeardayFromDate\1\Returns the day number in the year from the given date\Date & Time\int16\date\year_day_from_date
+YearFromDate\1\Returns the year from the given date\Date & Time\int16\date\year_from_date
+YearweekFromDate\1\Returns the week number in the year from the given date\Date & Time\int16\date\year_week_from_date
+/*
+/* The [parallelonly-beforeafter] section contains lines defining built-in before/after
+/* routines for the Transform editor dialogs that are only available to parallel jobs.
+/* The line format is the same as for the [functions] section
+/*
+[parallelonly-beforeafter]
+SetCustomSummaryInfo\3\Store the given monitor custom information\\\anystring:name,anystring:description,anystring:value\set_custom_summary_info,u_set_custom_summary_info
+/*
+/* The [system-variables] section contains lines defining system 
+/* variables which are recognized in expression syntax.
+/* This set are valid on both server and parallel jobs
+/* Each line consists of: 
+/*	system variable name [\O][!<context validity>][!<context validity>]....
+/* where:
+/*(i) 	the optional "\O" indicates a variable that is only
+/*	valid in output expressions.
+/*(ii)	the optional "!<context validity> switches indicate the contexts
+/*	in which the variable is NOT valid, as follows:		
+/*	C - constraint, L - output link column, K - primary key, B - breakpoint, 
+/*	T - transform, V - stage variable, I - stage variable initialiser,
+/*	S - single list, P - loop variable, A - loop variable initialiser, 
+/*	N - loop condition
+/*	Note that \O currently implies \!K\!B\!T\!I\!S\!A
+[system-variables]
+@FALSE
+@INROWNUM\O
+@OUTROWNUM\O\!V\!P\!N
+@TRUE
+/*
+/* The [serveronly-system-variables] section contains lines defining system 
+/* variables which are recognized in expression syntax in server jobs only.
+/* The line format is the same as in the [system-variables] section above.
+/*
+[serveronly-system-variables]
+@DATE
+@DAY
+@FM
+@IM
+@LOGNAME
+@MONTH
+@NULL
+@NULL.STR
+@PATH
+@SCHEMA
+@SM
+@TIME
+@TM
+@USERNO
+@VM
+@WHO
+@YEAR
+/*
+/* The [parallelonly-system-variables] section contains lines defining system 
+/* variables which are recognized in expression syntax in parallel jobs only.
+/* The line format is the same as in the [system-variables] section above.
+/*
+[parallelonly-system-variables]
+@PARTITIONNUM
+@NUMPARTITIONS
+@ITERATION\O\!V
+/*
+/*
+/*
+/* [EnvVarDefns]
+/*
+/* Contains environment variable definitions that can be set for DataStage jobs
+/* Format is: <EnvVarName>\<Category>\<JobType>\<Type>[+]\<Default>\<SetAction>\<Scope>\<PromptText>\<HelpText>
+/* Where:
+/*            <EnvVarName> is the name of the enviroment variable that will be set in OSH
+/*            <Category> is the category name where the environment variable will appear.  In format <cat1>/<subcat1>/<subcat2>/... etc
+/*            <JobType> is the job type number (0 = Server, 3 = Parallel, -1 = all)
+/*            <Type> is one of: Number, String, FilePath, DirPath, List, Boolean, UserDef
+/*                   If List, then format of Type is futher divided: ...<EnvVarName>\List/<Item1>/<ItemDisplay1>/<Item2>/<ItemDisplay2>\<Scope>...
+/*                     (ItemDisplay values must be left blank here, and added as localised strings in envvar.cls
+/*                   If Boolean, then the value the envvar is set to should be irrelevant
+/*                   If proceeded by a '+' character, then the value set here is appended to any existing value already set in the shell,
+/*                   separated by a ':' character
+/*            <Default> The default value
+/*            <SetAction> What action should be taken when setting the environment variable at job run time:
+/*                        0 = Always set if the environment variable has been overriden.
+/*                        1 = Only set the environment variable if its value is different to its default
+/*                        2 = Explicitly unset the environment variable if the value is set to the default, otherwise same as 1
+/*                        3 = Always set the environment variable
+/*                        4 = Osh Boolean. Set if true, no action if false
+/*            <Scope> is one of: Project, Design, RunTime
+/*            <PromptText> is the text displayed to prompt the user for the env var. If "" then <EnvVarName> will be used
+/*            <HelpText> is a longer description of the env var.
+/*
+/* The '/' or '\' characters can't be used as general text
+/*
+/* If the DataStage clients know about the given environment variable, all the user visible display texts will be overriden such that they are localised.
+/*
+[EnvVarDefns]
+DSIPC_OPEN_TIMEOUT\Parallel/Operator Specific\3\Number\30\3\Project\IPC Open timeout\Specifies the time allowed for server shared containers and Basic Transformers to complete initialization.
+APT_DEFAULT_TRANSPORT_BLOCK_SIZE\Parallel\3\Number\131072\2\Project\Default transport block size\Specifies the default size in bytes for transferring data between players. The valid value range for this variable is 8192 to 1048576. If necessary, the value provided by a user for this variable is rounded up to the operating system's nearest page size. This variable is provided as part of the functionality for processing records greater than 128K.
+APT_LATENCY_COEFFICIENT\Parallel\3\Number\5\2\Project\Transport block latency coefficient\Represents the number of writes to a transport block.
+APT_BUFFERING_POLICY\Parallel\3\List/AUTOMATIC_BUFFERING//FORCE_BUFFERING//NO_BUFFERING/\AUTOMATIC_BUFFERING\2\Project\Buffering policy\Controls buffering policy for all virtual data sets.
+APT_BUFFER_MAXIMUM_TIMEOUT\Parallel\3\Number\1\2\Project\Maximum buffer timeout\The maximum time in seconds between deadlock avoidance buffering retries.
+APT_BUFFER_FREE_RUN\Parallel\3\Float\0.5\2\Project\Buffer operator memory limit\Buffer operator memory limit as a multiple of maximum buffer size.
+APT_CHECKPOINT_DIR\Parallel\3\DirPath\\2\Project\Check point directory\Directory where state information is stored for a restartable step.
+APT_CLOBBER_OUTPUT\Parallel\3\Boolean\0\2\Project\Automatically overwrite\Allows files or data sets to be overwritten if they already exist.
+APT_CONFIG_FILE\Parallel\3\FilePath\/iis/01/InformationServer/Server/Configurations/default.apt\3\Project\Configuration file\The Parallel job configuration file.
+APT_COPY_TRANSFORM_OPERATOR\Parallel/Operator Specific\3\Boolean\0\2\Project\Transformer, distribute the shared library\Enables the Transformer Stage to work in a non-NFS MPP by distributing the shared library to all the remote nodes at runtime.  Users must have appropriate privileges to create the project directory paths on all the remote nodes at runtime.
+APT_DBNAME\Parallel/Operator Specific\3\String\\2\Project\DB2 Database\Default DB2 database to use\
+APT_DISABLE_COMBINATION\Parallel\3\Boolean\0\2\Project\Disable operator combination\Prevents operators from being combined into one process.
+APT_DUMP_SCORE\Parallel/Reporting\3\Boolean\0\2\Project\Report score\If set, the Parallel job will produce a report showing the operators, processes and data sets in a running application.
+APT_EXECUTION_MODE\Parallel\3\List/PARALLEL//ONE_PROCESS//MANY_PROCESS//NO_SERIALIZE/\PARALLEL\2\Project\Execution mode\Change the execution mode of the application
+APT_IO_MAXIMUM_OUTSTANDING\Parallel\3\Number\2097152\2\Project\Maximum IO outstanding\The amount of memory (in bytes) allocated to a Parallel job on every physical node for network communications.
+APT_IOMGR_CONNECT_ATTEMPTS\Parallel\3\Number\2\2\Project\Maximum TCP retries\The number of attempts for a TCP connect in case of a connection failure.
+APT_MONITOR_MINTIME\Parallel\3\Number\10\3\Project\Minimum monitor time interval\Minimum time interval in seconds that should elapse between each internal rowcount-based monitor update.
+APT_MONITOR_SIZE\Parallel\3\Number\50000\1\Project\Monitor interval\The interval in rows between job monitor updates.
+APT_MONITOR_TIME\Parallel\3\Number\10\1\Project\Monitor interval(secs)\The interval in seconds between job monitor updates.
+APT_MSG_FILELINE\Parallel/Reporting\3\Boolean\0\2\Project\Extra logging information\Causes logging of extra internal information for Parallel jobs.
+APT_INSERT_COPY_BEFORE_MODIFY\Parallel\3\Boolean\0\2\Project\Cause insert of copy before modify\Cause insertion of copy operator before modify operator.
+APT_NO_STARTUP_SCRIPT\Parallel\3\Boolean\0\2\Project\Skip startup script\Prevents Parallel job from executing a startup script.
+APT_ORCHHOME\Parallel\3\DirPath\/iis/01/InformationServer/Server/PXEngine\3\Project\Parallel home directory\Parallel home directory path.
+APT_OUTPUT_ACCESSOR_BINDING_BUG_COMPATIBILITY\Parallel\3\Boolean\0\2\Project\Legacy compatibility\If set, allows legacy operators that depend on an output accessor to be set up on a transferred field even if the output interface does not mention that field.
+APT_ORAUPSERT_COMMIT_ROW_INTERVAL\Parallel/Operator Specific\3\Number\5000\2\Project\Oracle, row commit interval\
+APT_ORAUPSERT_COMMIT_TIME_INTERVAL\Parallel/Operator Specific\3\Number\2\2\Project\Oracle, time commit interval\
+APT_ORA_IGNORE_CONFIG_FILE_PARALLELISM\Parallel/Operator Specific\3\Boolean\0\2\Project\Oracle, ignore configuration file parallelism\
+APT_ORACLE_LOAD_OPTIONS\Parallel/Operator Specific\3\String\\2\Project\SQL*Load options\Oracle, options to pass to SQL*Load\
+APT_PM_CONDUCTOR_HOSTNAME\Parallel\3\String\\2\Project\Conductor hostname\The network name of the processing node from which you invoke a Parallel application.
+APT_PM_PLAYER_MEMORY\Parallel/Reporting\3\Boolean\0\2\Project\Report player memory allocation\Causes each player process to report the process heap memory allocation when returning from runLocally().
+APT_PM_PLAYER_TIMING\Parallel/Reporting\3\Boolean\0\2\Project\Report player calls\Causes each player process to report the call to and return from runLocally().
+APT_RDBMS_COMMIT_ROWS\Parallel/Operator Specific\3\Number\2048\2\Project\RDMS commit rows\
+APT_RECORD_COUNTS\Parallel/Reporting\3\Boolean\0\2\Project\Report record counts\Causes the framework to print, for each operator Player, the number of records consumed by getRecord() and produced by putRecord().
+APT_STACK_TRACE\Parallel\3\String\10\2\Project\Stack trace lines\Controls the number of lines printed for stack traces.  Setting to empty will disable stack tracing.
+APT_STARTUP_SCRIPT\Parallel\3\FilePath\\2\Project\Startup script\Script to modify the shell configuration of one or more processing nodes.
+APT_STRING_PADCHAR\Parallel\3\String\0x0\2\Project\Pad character\Sets the pad character used when padding a string to a fixed length.
+APT_THREAD_SAFE_FAST_ALLOC\Parallel\3\List/DISABLE//THREADSAFE//LEGACY/\LEGACY\2\Project\Threadsafe fast allocation configuration\Sets the behaviour for parallel engine threadsafe fast allocation. "Disable" will disable the fast allocator and malloc/free will be used directly; "Threadsafe" will use threadsafe fast allocators; "Legacy" will use non-threadsafe allocators.
+APT_TERA_64K_BUFFERS\Parallel/Operator Specific\3\Boolean\0\2\Project\Teradata, enable 64K buffers\Enables the use of 64K buffers for the terawrite operator.
+APT_TERA_NO_ERR_CLEANUP\Parallel/Operator Specific\3\Boolean\0\2\Project\Teradata, no table cleanup\Prevents the removal of error tables and the partially written target table of a terawrite operator that has not successfully completed.
+APT_IMPORT_REJECT_STRING_FIELD_OVERRUNS\Parallel/Operator Specific\3\Boolean\0\2\Project\Import, reject string overruns\Reject records that have string or ustring fields that are longer than the defined maximum length.
+APT_V6_SCORE\Parallel\3\Boolean\0\1\Project\V6-compatible score distribution\Set this to enable compatibility with version 6 and prior parallel dataflow representation. Larger flows will consume significantly more memory when this flag is set.
+APT_WRITE_DS_VERSION\Parallel\3\List/v3_0//v3//v4//v4_0_3//v41/\v41\2\Project\Dataset version\Lets you save data sets in formats compatible with old versions of the Parallel environment.
+OSH_DUMP\Parallel/Reporting\3\Boolean\0\2\Project\Report step description\Causes Parallel job to echo a verbose description of a step before attempting to execute it.
+OSH_ECHO\Parallel/Reporting\3\Boolean\0\2\Project\Report step specification\Causes Parallel job to echo its step specification to standard error after the shell has expanded all arguments.
+OSH_EXPLAIN\Parallel/Reporting\3\Boolean\0\2\Project\Report terse step description\Causes Parallel job to echo a terse description of the step before attempting to run it.
+OSH_PRELOAD_LIBS\Parallel\3\FilePath+\\2\Project\Preloaded libraries\A colon-separated list of names of libraries to be loaded before any other processing.
+OSH_PRINT_SCHEMAS\Parallel/Reporting\3\Boolean\0\2\Project\Report schemas\Causes Parallel job to print the record schema of all data sets and the interface schema of all operators.
+TMPDIR\General\-1\DirPath\\1\Project\Temporary directory\Temporary directory path.
+DS_ENABLE_RESERVED_CHAR_CONVERT\General/Customize\-1\Boolean\0\3\Project\Enable reserved character handling\Enable handling of reserved characters in DB2 and Oracle column names.
+DS_OPERATOR_BUILDOP_DIR\Parallel\3\DirPath\buildop\3\Project\Generated BuildOp Directory\Generated BuildOp Directory.
+DS_OPERATOR_WRAPPED_DIR\Parallel\3\DirPath\wrapped\3\Project\Generated Wrapped Directory\Generated Wrapped Directory.
+APT_OPERATOR_REGISTRY_PATH\Parallel\3\DirPath+\\3\Project\Operator Search Path\Operator Search Path.
+DS_TDM_TRACE_SUBROUTINE_CALLS\General/Customize\-1\Boolean\0\3\Project\Trace TDMLoad plug-in subroutine calls\Enable tracing of subroutine calls in the TDMLoad plug-in.
+DS_TDM_PIPE_OPEN_TIMEOUT\General/Customize\-1\Number\720\3\Project\TDMLoad plug-in pipe open timeout\The maximum number of seconds that the TDMLoad plug-in should wait for MultiLoad to open the named pipe.
+APT_DECIMAL_INTERM_PRECISION\Parallel\3\Number\38\1\Project\Default maximum precision for decimal intermediate variables\Specifies the default maximum precision value for any decimal intermediate variables required in calculations.
+APT_DECIMAL_INTERM_SCALE\Parallel\3\Number\10\1\Project\Default scale for decimal intermediate variables\Specifies the default scale value for any decimal intermediate variables required in calculations.
+APT_DECIMAL_INTERM_ROUND_MODE\Parallel\3\List/ceil//floor//round_inf//trunc_zero/\round_inf\1\Project\Default rounding mode for decimal intermediate variables\Specifies the default rounding mode for any decimal intermediate variables required in calculations.
+APT_DATE_CENTURY_BREAK_YEAR\Parallel\3\Number\1900\1\Project\Default century break year\Specifies the year that is used to separate 19nn years from 20nn years, when two-digit year is used in the data.
+APT_COLLATION_STRENGTH\Parallel\3\List/default//identical//primary//secondary//tertiary//quarternary/\default\2\Project\Collation strength\Collation strength defines the specifics of the collation algorithm; it can be used to ignore accents, punctuation or other details.
+APT_SAS_ACCEPT_ERROR\Parallel/Operator Specific\3\Boolean\0\2\Project\Do not abort on SAS error\Normal behavior when a SAS procedure reports an error is to abort the job. If this variable is set, the job will continue.
+APT_SAS_CHARSET_ABORT\Parallel/Operator Specific\3\Boolean\0\2\Project\Abort on Unicode schema problems\Cause an abort if Unicode string (ustring) is found in the schema and DataStage NLS is not enabled.
+APT_SAS_COMMAND\Parallel/Operator Specific\3\String\\2\Project\Override US SAS executable\Overrides the $PATH directory name for the US SAS executable with the absolute pathname. For example /usr/local/sas/sas8.2/sas.
+APT_SASINT_COMMAND\Parallel/Operator Specific\3\String\\2\Project\Override international SAS executable\Overrides the $PATH directory name for the international (non-US) SAS executable with the absolute pathname. For example /usr/local/sas/sas8.2int/dbcs/sas
+APT_SAS_DEBUG_LEVEL\Parallel/Operator Specific\3\List/0//1//2//3\0\2\Project\Set SAS stage diagnostic level\SAS stage logs debug messages from the SAS driver. Duplicates the debug program options of the SAS stage.
+APT_SAS_DEBUG\Parallel/Operator Specific\3\Boolean\0\2\Project\Set debug in the SAS process\Set debug in the SAS process coupled to the SAS stage. Messages appear in the SAS log. You control where the SAS log appears using the SAS Log File Location stage property. Its default is the DataStage log.
+APT_SAS_DEBUG_IO\Parallel/Operator Specific\3\Boolean\0\2\Project\Set I/O debug in the SAS process\Set input/output debug in the SAS process coupled to the SAS stage. Messages appear in the SAS log, which may then be copied into the DataStage log.
+APT_SAS_DEBUG_VERBOSE\Parallel/Operator Specific\3\Boolean\0\2\Project\Set verbose debug in the SAS process\Set verbose debug in the SAS process coupled to the SAS stage. Messages appear in the SAS log, which may then be copied into the DataStage log.
+APT_SAS_S_ARGUMENT\Parallel/Operator Specific\3\Number\0\2\Project\Offset of input SAS record\Typically, Orchestrate executes SAS with "-s 0", when this is set, the value of this variable will be used instead of "0". The -s option indicates the offset of the input SAS source record to read. For example, a line number might appear in input SAS code; 	0001 data temp; x=1; run; 	0002 proc print; run; and you wanted to bypass the line number, APT_SAS_S_ARGUMENT would be 6.
+APT_SAS_SCHEMASOURCE_DUMP\Parallel/Operator Specific\3\Boolean\0\2\Project\Print Schema Source commandline \When using SAS Schema Source options, this option causes the command line to e placed in the log. If you are getting an error when specifying the SAS data set containing the schema source, set this environment variable to see file containing the SAS log.
+APT_SAS_SHOW_INFO\Parallel/Operator Specific\3\Boolean\0\2\Project\Display SAS standard output text\Displays the standard output text from a SAS import/export. This output is normally deleted, since it will (presumably) always be successful.
+APT_SAS_TRUNCATION\Parallel/Operator Specific\3\List/TRUNCATE//ABORT//NULL/\TRUNCATE\2\Project\Unicode string export truncation action\Action to take on export when an n-character Unicode string (ustring) will not fit an n-byte SAS char field on export. Abort the stage, export a NULL field or truncate the data. For the null and truncate options, the first five occurrences on each column cause an information message to be logged.
+APT_HASH_TO_SASHASH\Parallel/Operator Specific\3\Boolean\0\2\Project\Use legacy sashash partitioner\SAS support is integrated directly in to the hash partitoner. Setting this environment variable uses a legacy sashash partitioner instead, which used a different (non-standard) hashing algorithm. Note that if  APT_NO_SAS_TRANSFORMS is set, this has no effect.
+APT_NO_SAS_TRANSFORMS\Parallel/Operator Specific\3\Boolean\0\2\Project\Do not insert SAS-specific transforms\By default, special SAS-specific transformations are inserted in a job (sasout, sasRoundRobin and so on). Setting this will prevent the insertion of these transformations.
+APT_NO_SASOUT_INSERT\Parallel/Operator Specific\3\Boolean\0\2\Project\Do not insert SAS-specific sasout transform\By default, special SAS-specific transformations are inserted in a job (sasout, sasRoundRobin and so on). Setting this will prevent the insertion of the sasout transformation.
+APT_BUFFER_DISK_WRITE_INCREMENT\Parallel\3\Number\1048576\2\Project\Control buffer flushing\When internal memory buffer fills up, controls how much data gets flushed to disk.  Default size is 1 MB.  May not exceed 2/3 of APT_BUFFER_MAXIMUM_MEMORY.  Adjusting this value trades the amount of disk access against throughput for small amounts of data. Increasing the block size reduces disk access, but may decrease performance when data is being read or written in smaller units. Decreasing the block size increases throughput, but may increase the amount of disk access.
+APT_BUFFER_MAXIMUM_MEMORY\Parallel\3\Number\3145728\2\Project\Virtual write buffer size\Set maximum amount of virtual memory used for each disk write buffer (in bytes).
+APT_BUFFERIO_MAP\Parallel/Operator Specific\3\Boolean\0\2\Project\Sequential file mmap I/O\Use memory mapped I/O for sequential file access. Unix offers two ways to access the contents of a file: read/write, and mmap (memory mapped I/O). Often mmap is faster than using read/write. However, this is operating system dependent, and in certain situations (such as a remote disk mounted via NFS) memory mapped I/O may cause significant performance problems. The default is operating system dependent - see also APT_BUFFERIO_NOMAP. (AIX and HP-UX default to NOMAP; other systems default to MAP).
+APT_BUFFERIO_NOMAP\Parallel/Operator Specific\3\Boolean\0\2\Project\Sequential file buffered I/O \Use read/write I/O for sequential file access. Unix offers two ways to access the contents of a file: read/write, and mmap (memory mapped I/O). Often mmap is faster than using read/write. However, this is operating system dependent, and in certain situations (such as a remote disk mounted via NFS) memory mapped I/O may cause significant performance problems. The default is operating system dependent - see also APT_BUFFERIO_MAP. (AIX and HP-UX default to NOMAP; other systems default to MAP).
+APT_IO_MAP\Parallel/Operator Specific\3\Boolean\0\2\Project\Dataset file mmap I/O\Use memory mapped I/O for dataset file access. Unix offers two ways to access the contents of a file: read/write, and mmap (memory mapped I/O). Often mmap is faster than using read/write. However, this is operating system dependent, and in certain situations (such as a remote disk mounted via NFS) memory mapped I/O may cause significant performance problems. The default is operating system dependent - see also APT_IO_NOMAP. (AIX and HP-UX default to NOMAP; other systems default to MAP).
+APT_IO_NOMAP\Parallel/Operator Specific\3\Boolean\0\2\Project\Dataset file buffered I/O \Use read/write I/O for dataset file access. Unix offers two ways to access the contents of a file: read/write, and mmap (memory mapped I/O). Often mmap is faster than using read/write. However, this is operating system dependent, and in certain situations (such as a remote disk mounted via NFS) memory mapped I/O may cause significant performance problems. The default is operating system dependent - see also APT_IO_MAP. (AIX and HP-UX default to NOMAP; other systems default to MAP).
+APT_CONSISTENT_BUFFERIO_SIZE\Parallel/Operator Specific\3\Number\\2\Project\File buffer size\Size in bytes of read and write buffers used for accessing sequential files, and certain other similar files such as named pipe access to wrapped operators. This is to take advantage of direct I/O, bypassing the OS buffer cache, where this feature is available on the target platform. If this variable is not set, the appropriate buffer size is determined on a case-by-case basis, depending on the record size, how the buffer class is being used, etc. If this variable is set, this size (or an exact multiple of this size) is used as the buffer size.
+APT_DB2INSTANCE_HOME\Parallel/Operator Specific\3\String\\2\Project\DB2 installation directory\DB2 installation home directory. Necessary when the db2instance is not accessible via the conductor node and a client interface is used.
+APT_DB2READ_LOCK_TABLE\Parallel/Operator Specific\3\Boolean\0\2\Project\Share-lock DB2 table \Locks DB2 table in share mode, if optional open command is not specified for DB2 stage.
+APT_DEBUG_SUBPROC\Parallel/Operator Specific\3\Boolean\0\2\Project\Wrapped operator debug\Turn on wrapped operator startup debug messages.
+APT_FILE_EXPORT_BUFFER_SIZE\Parallel/Operator Specific\3\Number\128\2\Project\Sequential write buffer size\Buffer size in kilobytes for export (sequential write) to files. The default is 128 (meaning 128K bytes). Minimum value is 8. Tune this upward for long-latency files, such as to heavily loaded file servers.
+APT_FILE_IMPORT_BUFFER_SIZE\Parallel/Operator Specific\3\Number\128\2\Project\Sequential read buffer size\Buffer size in kilobytes for import (sequential read) from files. The default is 128 (meaning 128K bytes). Minimum value is 8. Tune this upward for long-latency files, such as from heavily loaded file servers.
+APT_EXPORT_FLUSH_COUNT\Parallel/Operator Specific\3\Number\\2\Project\Control sequential flush\Allows the export / sequential write operator to flush data to disk more often than it typically does (data is explicitly flushed at the end of a job, although the OS may choose to do so more frequently). Set this variable to an integer which, in number of records, controls how often flushes should occur. Setting this value to a low number (such as 1) is useful for real time applications, but there is a small performance penalty associated with setting this to a low value.
+APT_IMPORT_PATTERN_USES_FILESET\Parallel/Operator Specific\3\Boolean\0\2\Project\Treat sequential pattern as fileset  \When set, sequential read (import) will turn any file pattern into a fileset before processing the files.  This allows the files to be processed in parallel as apposed to sequentially.  By default, file pattern processing will concatenate the files to be used as the input.
+APT_MAX_TRANSPORT_BLOCK_SIZE\Parallel\3\Number\1048576 \2\Project\Max internal block size\Maximum allowable block size in bytes for transferring records internally in parallel jobs. This cannot be greater than 1048576 which is its default value.
+APT_MIN_TRANSPORT_BLOCK_SIZE\Parallel\3\Number\8192 \2\Project\Min internal block size\Minimum allowable block size in bytes for transferring records internally in parallel jobs. This cannot be less than 8192 which is its default value.
+APT_NO_JOBMON\Parallel/Reporting\3\Boolean\0\2\Project\Disable job monitor\Disable job monitoring and process meta data reporting for parallel jobs.
+APT_NO_PART_INSERTION\Parallel\3\Boolean\0\2\Project\Disable automatic partitioning \Turns off automatic insertion of partitioners based on requirements of stage operators.
+APT_NO_SORT_INSERTION\Parallel\3\Boolean\0\2\Project\Disable sort insertion\Turns off automatic insertion of sorting based on requirements of stage operators.
+APT_ORA_WRITE_FILES\Parallel/Operator Specific\3\String\\2\Project\Override Oracle loader\Write output to files and prevent invocation of Oracle loader (sqlldr) when write is selected on destination Oracle stage.  Instead, the value of this environment variable is used as the name of a file into which the sqlldr commands are written.  This file can be invoked once the job is finished to run the loaders sequentially. This is useful to track down export and pipe-safety related bugs in the loader. The Oracle 8.0.5 loader for example does not appear to be pipe-safe with fixed length records.
+APT_ORACLE_LOAD_DELIMITED\Parallel/Operator Specific\3\String\\2\Project\Delimited load records\Create delimited records when loading into Oracle's sqlldr, when write is selected on destination Oracle stage. The value of this variable (which should be a character) is used as the delimiter.
+APT_ORACLE_PRESERVE_BLANKS\Parallel/Operator Specific\3\Boolean\0\2\Project\Oracle preserve blanks\If this environment variable is set, PRESERVE BLANKS will be added to the control file for the Oracle loader (sqlldr), generated by the write option of a destination Oracle stage. This preserves leading and trailing spaces; and fields which contain only spaces. If this option is not set, Oracle will trim these spaces and consider fields with only spaces as NULL values.
+APT_PERFORMANCE_DATA\Parallel/Reporting\3\String\\2\Project\Performance data directory\Enable production of advanced runtime performance data files. The value of the environment variable is the directory name into which these files should be placed.
+APT_PHYSICAL_DATASET_BLOCK_SIZE\Parallel/Operator Specific\3\Number\\2\Project\Dataset block size\Specifies the block size to use when reading and writing a physical data set. This allows for the independent tuning of buffer sizes for physical and virtual data. The maximum size is APT_MAX_TRANSPORT_BLOCK_SIZE.
+APT_PM_NO_NAMED_PIPES\Parallel\3\Boolean\0\2\Project\Disable named pipes\Disable use of named pipes for local connections in parallel jobs.
+APT_PM_NODE_TIMEOUT\Parallel\3\Number\\2\Project\Startup timeout\This controls the number of seconds that the main parallel job process (conductor) will wait for the main stage processes (section leaders) to start up and load internal processing information (a score) before deciding that something has failed. The default for starting a section leader process is 30 seconds. The default for loading a score is 120 seconds.
+APT_PM_SHOW_PIDS\Parallel/Reporting\3\Boolean\0\2\Project\Show internal PIDs\If this is set, stage processes (players) will log a message upon startup, displaying their operating system process ID.
+APT_PM_SHOWRSH\Parallel/Reporting\3\Boolean\0\2\Project\Show RSH commands\Log a message for each call to the remote shell (RSH).
+APT_PREVIOUS_FINAL_DELIM_COMPATIBLE\Parallel/Operator Specific\3\Boolean\0\2\Project\Legacy delimiter behavior\Enable final_delimitor behavior as implemented prior to DataStage 7.0.1.
+APT_SHOW_COMPONENT_CALLS\Parallel/Reporting\3\Boolean\0\2\Project\User-overloadable function information\Display information at job start or validation time  about user-overloadable functions being called.
+APT_SORT_INSERTION_CHECK_ONLY\Parallel\3\Boolean\0\2\Project\Use check-only inserted sorts\When sorts are inserted automatically by the parallel engine, setting this variable ensures that these sorts will just be checks that the order is correct. They will not actually do any sorting. This is a better alternative to shutting part and sort insertion off altogether via APT_NO_PART_INSERTION and APT_NO_SORT_INSERTION.
+APT_STARTUP_STATUS\Parallel/Reporting\3\Boolean\0\2\Project\Extra startup messages\Cause messages to be issued as parallel job startup moves from phase to phase. It can be useful if parallel job startup is failing.
+PX_DBCONNECTHOME\Parallel\3\DirPath\/iis/01/InformationServer/Server/DSComponents\3\Project\Parallel database operators home directory\Parallel database operators home directory path
+APT_NO_ONE_NODE_COMBINING_OPTIMIZATION\Parallel\3\Boolean\1\4\Project\Disable operator combining optimization on 1-node configuration\This variable controls whether the PX Engine performs extra optimization to combine as many processes as possible on a 1-node configuration.
+APT_TRANSFORM_LOOP_WARNING_THRESHOLD\Parallel/Operator Specific\3\Number\-1\1\Project\Transformer, override Transformer loop warning threshold\This variable can be used to override the value specified in a job for the transformer loop warning threshold. A value of -1 indicates that it will not override the value in the job. A value of 0 overrides the value in the job and means that there will be no warnings at all. A value greater than zero will override the value in the job and this value will be the warning threshold.
+APT_TRANSFORM_COMPILE_OLD_NULL_HANDLING\Parallel/Operator Specific\3\Boolean\0\4\Project\Transformer legacy null handling\Enable legacy handling of null expressions in the parallel transformer. Rows containing unhandled null expressions are rejected or dropped, or cause an abort if the 'Abort on unhandled null' option is selected. The option affects compilation of transformers; the "force compile" option should be used to ensure that the environment variable change is picked up by all transformers in a job.
+DS_OPTIMIZE_FILE_BROWSE\General/Customize\-1\Boolean\0\3\Project\Enable the file browse optimization\This variable controls the optimized file browse functionality for fast browsing of server side files and directories from clients
+APT_NO_PARTSORT_OPTIMIZATION\Parallel\3\Boolean\0\4\Project\Disable part/sort optimizations\Disables the following optimizations: repartition on all input links even if one input link requires a repartition, replacement (instead of additional) sort if existing one does not fulfill requirements of downstream stage.
+APT_USE_IPV4\Parallel\3\Boolean\0\4\Project\Use IPv4 only\Forces network calls to use IPv4 protocol only, by default it will use IPv6/IPv4 dual stack.
+APT_DISABLE_ROOT_FORKJOIN\Parallel\3\Boolean\0\4\Project\Disable fork join buffer insertion\This applies to jobs with a fork/join pattern where funnel is the join, setting this disables buffer insertion that normally happens before the funnel. Note: setting this can cause potential deadlock.
+APT_PXDEBUGGER_FORCE_SEQUENTIAL\Parallel\3\String\\2\Project\Debugger force sequential\Double quoted string containing a space separated list of operators to be forced to run sequentially when running in the debugger.
+APT_ISVALID_BACKCOMPAT\Parallel\3\Boolean\0\4\Project\IsValid back compatibility\The functionality of function IsValid() changed post v8.0.1. The functionality was revised to return true or false depending on whether an implicit conversion of the given string to a variable of the specified type would work or not, when coded in a transform expression. Set this to retain the old (pre v8.1) functionality.
+PATH\General\-1\DirPath+\/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/usr/X11R6/bin:.\3\Project\Shell search path\Shell search path.
+LD_LIBRARY_PATH\General\-1\DirPath+\/usr/lib:.\3\Project\LD library path\
+APT_COMPILER\Parallel/Compiler\3\String\g++\3\Project\Compiler\Compiler for Parallel transformer\
+APT_COMPILEOPT\Parallel/Compiler\3\String\-c -O -fPIC -Wno-deprecated -m64 -mtune=generic -mcmodel=small\3\Project\Compiler options\Compiler options for Parallel transformer\
+APT_LINKER\Parallel/Compiler\3\String\g++\3\Project\Linker\Linker for Parallel transformer\
+APT_LINKOPT\Parallel/Compiler\3\String\-shared -m64\3\Project\Linker options\Linker options for Parallel transformer\
+APT_USE_CRLF\Parallel/Operator Specific\3\Boolean\0\4\Project\Default to Windows format files\Default to Windows format files (carriage return, line feed) if unspecified for sequential stages. Otherwise sequential files default to UNIX format.
+APT_RTLD_GLOBAL\Parallel\3\Boolean\0\4\Project\Use RTLD_GLOBAL library flag\If set, will load Parallel job libraries using the RTLD_GLOBAL flag
+[PROJECT]
+DefaultPlatform=OS390
+PXRemoteEnable=0
+PXRemoteDeploy=0
+PXRemoteCoupled=0
+PXRemoteMachine=
+PXRemoteBaseDirectory=
+PXRemoteUsername=
+PXRemotePassword=
+PXDeployJobDirectoryTemplate=
+PXDeployCustomAction=
+[InternalSettings]
+DisableParSCCheck=0
