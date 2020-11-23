@@ -1,0 +1,57 @@
+[
+    {
+        "_Comment" : "This is my comment on how to use this file. It has none of the required fields, and so should be ignored by the scripts that process it.",
+        "_Comment" : "This is a second line of my comments."
+
+    },
+    {
+        "_Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
+        "EnvVarName": "MyVariable",
+        "Category": "User Defined",
+        "JobType": "-1", 
+        "Type": "String",
+        "Default": "default_value",
+        "SetAction" : "0",
+        "Scope" :  "Project",
+        "PromptText" : "Prompty prompt prompt."
+    },
+    {
+        "EnvVarName": "MyVariable2",
+        "Category": "User Defined",
+        "JobType": "-1",
+        "Type": "String",
+        "Default": "default_value",
+        "SetAction" : "0",
+        "Scope" :  "Project",
+        "PromptText" : "Prompty prompt prompt.",
+        "HelpText" : "This is helpful."
+    },
+    {
+        "EnvVarName": "MyVariableMinDefn"            
+    },
+    {
+        "EnvVarName": "MyUnsetVariable",
+        "Default": "It's set now!"
+
+    },
+    {
+        "EnvVarName": "MySetVariable",
+        "Default": "This has changed to this!"
+    },   
+    {
+        "EnvVarName": "APT_CONFIG_FILE",
+        "PromptText" : "Prompty prompt prompt.", 
+        "Default": "/tmp/myconfig.apt"
+    },
+    {
+        "Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
+        "EnvVarName": "MyStandardVariable2",
+        "Category": "User Defined",
+        "JobType": "-1", 
+        "Type": "String",
+        "Default": "default_value",
+        "SetAction" : "0",
+        "Scope" :  "Project",
+        "PromptText" : "Prompt for a standard variable2. This has been changed in project specific config file."
+    }
+]
