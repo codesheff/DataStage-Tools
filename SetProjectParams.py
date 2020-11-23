@@ -620,12 +620,15 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
             t = time.localtime()
             backupfile=orig_file + time.strftime('%b-%d-%Y_%H%M', t)
             shutil.copyfile(orig_file,backupfile)
+        
     else:
         logMessage.info(orig_file + ' - does not exist. Creating new file.')
     
     ## Only got to here if does not match  (ie new or different)
     logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
-    shutil.copyfile(new_temp_file, orig_file)
+    #shutil.copyfile(new_temp_file, orig_file)
+    shutil.move(new_temp_file, orig_file)
+    
     return 1
 
 
@@ -844,7 +847,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                     print('processing ' + env_var_name )
                     if env_var_object.EnvVarDefn != None:
                         print('processing definition for  ' + env_var_name )
-                        print('THIS IS WHERE YOU ARE UP TO STEPHEN! ')
+                        #print('THIS IS WHERE YOU ARE UP TO STEPHEN! ')
                         ## Need to add in bit for adding these ( user defined ) variable definitions
                         ### Then need to add code for setting the values in the values section.
 
@@ -949,9 +952,17 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     f_temp.close() # This will close ( and finish writing to ) the temp file
     # Now compare the temp file and the target DSParam file, and replace the target DSParam with new temp file if there are differences. ( set the correct ownership and permissions first)
     import pwd
-    uid=pwd.getpwnam(GetDSAdminName()).pw_uid
     import grp 
-    gid=grp.getgrnam(GetDSAdminName()).gr_gid
+
+    try: 
+        adminName=GetDSAdminName()
+        adminGroup=GetDSAdminGroup()
+        
+        uid=pwd.getpwnam(adminName).pw_uid  
+        gid=grp.getgrnam(adminGroup).gr_gid
+    except KeyError:
+        logMessage.error('Unable to find uid or gid for ' + adminName )
+        return None
 
     try:
         os.chown(fp.name,uid,gid)
@@ -968,7 +979,11 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
     ReplaceOldWithNewFile(orig_file=dsparams_path, new_temp_file=fp.name)
 
-    fp.close() # This will close and delete the temp file
+    try: 
+        fp.close() # This will close and delete the temp file
+    except:
+        ## file has been removed already by move done in ReplaceOldwithNewFile
+        pass 
     f.close
     
 
@@ -977,19 +992,36 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
 
 
-def GetDSAdminName():
+def GetDSAdminName(version_xml='/iis/01/InformationServer/Version.xml'):
     """
     This should be the standard way of getting the DataStage admin user name
     """
-    #return 'isdsad01'
-    return 'stedo'
 
-def GetDSAdminGroup():
+    from datastage_functions import GetValueFromVersionXML
+
+    #version_xml='/iis/01/InformationServer/Version.xml'
+    variable_name='datastage.user.name'
+    value=GetValueFromVersionXML(version_xml,variable_name )
+
+
+    
+
+
+    return value
+    #return 'stedo'
+
+def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
     """
     This should be the standard way of getting the DataStage admin users group
     """
-    return 'dsadmgrp'
-    #return 'stedo'
+
+    from datastage_functions import GetValueFromVersionXML
+
+    
+    variable_name='ds.admin.gid'
+    value=GetValueFromVersionXML(version_xml,variable_name )
+    return value
+    
 
 
 ##  Main line
@@ -1010,9 +1042,19 @@ logMessage.info('project_name is :' + args.project_name )
 # Check you will have permissions to change the files as required
 import os
 import pwd
-uid=pwd.getpwnam(GetDSAdminName()).pw_uid
 import grp 
-gid=grp.getgrnam(GetDSAdminGroup()).gr_gid
+
+try: 
+    adminName=GetDSAdminName()
+    adminGroup=GetDSAdminGroup()
+    
+    uid=pwd.getpwnam(adminName).pw_uid  
+    gid=grp.getgrnam(adminGroup).gr_gid
+except KeyError:
+    logMessage.error('Unable to find uid or gid for ' + adminName )
+    sys.exit("\nUser not found.\n")
+
+
 
 if not os.geteuid() == 0 and not os.getuid() == uid:
     sys.exit("\nOnly root or the datastage admin can run this script\n")
