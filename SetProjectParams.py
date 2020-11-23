@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
 """
+STILL TO DO:
+  Better log info messages
+  Work out path to DSParams file ( or take that in as param?) - maybe either give project name or give path to the DSParam file
+  Handle multiple projects  ( list of projects? 'all' projects?)
+  Get DSParams path for project name
+  Got through and tidy up. Make sure each function can be described easily.
+  See if you can create unit tests ( is it appropriate for this?)
+  Check what can go into some SharedFunctions module ( probably want a better name for that)
+
 This script will 
   * take in path to a param file?( format?), which contains project parameter definitions.
   * take the standard DSParams from Template, 
@@ -21,195 +30,48 @@ import os
 
 def GetProjectParamConfig(filePath=''):
     """
-    This should really take  in a path to the config file
-    Returns json object
+    Reads a json file, and returns the json object ( list of dictionaries).
 
-    Definitions are taken from the DSParam file.
-    i.e 
+    Definitions for variables in json param file are taken from the DSParam file.  ( see comments below in code)         
+""" 
 
-    <EnvVarName> is the name of the enviroment variable that will be set in OSH
-    <Category> is the category name where the environment variable will appear.  In format <cat1>/<subcat1>/<subcat2>/... etc
-    <JobType> is the job type number (0 = Server, 3 = Parallel, -1 = all)
-    <Type> is one of: Number, String, FilePath, DirPath, List, Boolean, UserDef
-                   If List, then format of Type is futher divided: ...<EnvVarName>\List/<Item1>/<ItemDisplay1>/<Item2>/<ItemDisplay2>\<Scope>...
-                     (ItemDisplay values must be left blank here, and added as localised strings in envvar.cls
-                   If Boolean, then the value the envvar is set to should be irrelevant
-                   If proceeded by a '+' character, then the value set here is appended to any existing value already set in the shell,
-                   separated by a ':' character
-    <Default> The default value
-    <SetAction> What action should be taken when setting the environment variable at job run time:
-                        0 = Always set if the environment variable has been overriden.
-                        1 = Only set the environment variable if its value is different to its default
-                        2 = Explicitly unset the environment variable if the value is set to the default, otherwise same as 1
-                        3 = Always set the environment variable
-                        4 = Osh Boolean. Set if true, no action if false
-    <Scope> is one of: Project, Design, RunTime
-    <PromptText> is the text displayed to prompt the user for the env var. If "" then <EnvVarName> will be used
-    <HelpText> is a longer description of the env var.
-
-  
-
-"""
-    ## Really all we need here is 
-    #    For all fields below, if EnvVarName already exists  - defaults to existing.
-    #    Only allow definition to change for User Defined
-    # EnvVarName - This is required
-    # Category  -- if already exists  - defaults to existing. If does not exist, defaults to "User Defined".
-    # Type -- defaults to String
-    # PromptText --defaults to EnvVarName
-    # Default  -- defaults to unset - for user defined Default is always empty in the definition but then record is set in the EnvVarValues to set it.
-    # SetAction  -- defaults to 0
-    # Scope -- defaults to Project
-    # HelpText -- defaults to PromptText
-    ## Actually, we maybe we should remove some of this fields, as we're just going to ignore them anyway. Only really valid for non-UserDefinined.
-    ## I'll start with the assumption that anything that comes from the parameter is either existing in template ( in which case we just use the values already in the definition), or is user definined.
-
-    ## For user defined, only valid fields are:
-    # EnvVarName
-    # Type - defaults to String
-    # Default - will actualy be used to set the Value ( Default in definition will stay as empty)
-    # PromptText
+#/* Contains environment variable definitions that can be set for DataStage jobs
+#/* Format is: <EnvVarName>\<Category>\<JobType>\<Type>[+]\<Default>\<SetAction>\<Scope>\<PromptText>\<HelpText>
+#/* Where:
+#/*            <EnvVarName> is the name of the enviroment variable that will be set in OSH
+#/*            <Category> is the category name where the environment variable will appear.  In format <cat1>/<subcat1>/<subcat2>/... etc
+#/*            <JobType> is the job type number (0 = Server, 3 = Parallel, -1 = all)
+#/*            <Type> is one of: Number, String, FilePath, DirPath, List, Boolean, UserDef
+#/*                   If List, then format of Type is futher divided: ...<EnvVarName>\List/<Item1>/<ItemDisplay1>/<Item2>/<ItemDisplay2>\<Scope>...
+#/*                     (ItemDisplay values must be left blank here, and added as localised strings in envvar.cls
+#/*                   If Boolean, then the value the envvar is set to should be irrelevant
+#/*                   If proceeded by a '+' character, then the value set here is appended to any existing value already set in the shell,
+#/*                   separated by a ':' character
+#/*            <Default> The default value
+#/*            <SetAction> What action should be taken when setting the environment variable at job run time:
+#/*                        0 = Always set if the environment variable has been overriden.
+#/*                        1 = Only set the environment variable if its value is different to its default
+#/*                        2 = Explicitly unset the environment variable if the value is set to the default, otherwise same as 1
+#/*                        3 = Always set the environment variable
+#/*                        4 = Osh Boolean. Set if true, no action if false
+#/*            <Scope> is one of: Project, Design, RunTime
+#/*            <PromptText> is the text displayed to prompt the user for the env var. If "" then <EnvVarName> will be used
+#/*            <HelpText> is a longer description of the env var.
+#/*
+#/* The '/' or '\' characters can't be used as general text
+#
 
 
+    import json
 
-    projectParamConfig= [
-        {
-            "EnvVarName": "MyVariable",
-            "Category": "User Defined",
-            "JobType": "-1", 
-            "Type": "String",
-            "Default": "default_value",
-            "SetAction" : "0",
-            "Scope" :  "Project",
-            "PromptText" : "Prompty prompt prompt."
-        },
-        {
-            "EnvVarName": "MyVariable2",
-            "Category": "User Defined",
-            "JobType": "-1",
-            "Type": "String",
-            "Default": "default_value",
-            "SetAction" : "0",
-            "Scope" :  "Project",
-            "PromptText" : "Prompty prompt prompt.",
-            "HelpText" : "This is helpful."
-        },
-        {
-            "EnvVarName": "MyVariableMinDefn"            
-        },
-        {
-            "EnvVarName": "MyUnsetVariable",
-            "Default": "It's set now!"
+    with open(filePath) as json_file:
+        data = json.load(json_file)
 
-        },
-        {
-            "EnvVarName": "APT_CONFIG_FILE",
-            "PromptText" : "Prompty prompt prompt.",     # this should get ignored as it's not user defined.
-            "Default": "/tmp/myconfig.apt"
-        }
-    ]
+    return data
 
-    return projectParamConfig
+    
 
-def GetProjectParamConfig_DodgyCopyForStandardParamsTest(filePath=''):
-    """
-    This should really take  in a path to the config file
-    Returns json object
-
-    Definitions are taken from the DSParam file.
-    i.e 
-
-    <EnvVarName> is the name of the enviroment variable that will be set in OSH
-    <Category> is the category name where the environment variable will appear.  In format <cat1>/<subcat1>/<subcat2>/... etc
-    <JobType> is the job type number (0 = Server, 3 = Parallel, -1 = all)
-    <Type> is one of: Number, String, FilePath, DirPath, List, Boolean, UserDef
-                   If List, then format of Type is futher divided: ...<EnvVarName>\List/<Item1>/<ItemDisplay1>/<Item2>/<ItemDisplay2>\<Scope>...
-                     (ItemDisplay values must be left blank here, and added as localised strings in envvar.cls
-                   If Boolean, then the value the envvar is set to should be irrelevant
-                   If proceeded by a '+' character, then the value set here is appended to any existing value already set in the shell,
-                   separated by a ':' character
-    <Default> The default value
-    <SetAction> What action should be taken when setting the environment variable at job run time:
-                        0 = Always set if the environment variable has been overriden.
-                        1 = Only set the environment variable if its value is different to its default
-                        2 = Explicitly unset the environment variable if the value is set to the default, otherwise same as 1
-                        3 = Always set the environment variable
-                        4 = Osh Boolean. Set if true, no action if false
-    <Scope> is one of: Project, Design, RunTime
-    <PromptText> is the text displayed to prompt the user for the env var. If "" then <EnvVarName> will be used
-    <HelpText> is a longer description of the env var.
-
-  
-
-"""
-    ## Really all we need here is 
-    #    For all fields below, if EnvVarName already exists  - defaults to existing.
-    #    Only allow definition to change for User Defined
-    # EnvVarName - This is required
-    # Category  -- if already exists  - defaults to existing. If does not exist, defaults to "User Defined".
-    # Type -- defaults to String
-    # PromptText --defaults to EnvVarName
-    # Default  -- defaults to unset - for user defined Default is always empty in the definition but then record is set in the EnvVarValues to set it.
-    # SetAction  -- defaults to 0
-    # Scope -- defaults to Project
-    # HelpText -- defaults to PromptText
-    ## Actually, we maybe we should remove some of this fields, as we're just going to ignore them anyway. Only really valid for non-UserDefinined.
-    ## I'll start with the assumption that anything that comes from the parameter is either existing in template ( in which case we just use the values already in the definition), or is user definined.
-
-    ## For user defined, only valid fields are:
-    # EnvVarName
-    # Type - defaults to String
-    # Default - will actualy be used to set the Value ( Default in definition will stay as empty)
-    # PromptText
-
-
-
-    projectParamConfig= [
-        {
-            "EnvVarName": "MyVariable",
-            "Category": "User Defined",
-            "JobType": "-1", 
-            "Type": "String",
-            "Default": "default_value",
-            "SetAction" : "0",
-            "Scope" :  "Project",
-            "PromptText" : "Prompty prompt prompt.",
-            "HelpText" : "This is helpful - and from standard ."
-        },
-        {
-            "EnvVarName": "MyVariable2",
-            "Category": "User Defined",
-            "JobType": "-1",
-            "Type": "String",
-            "Default": "default_value",
-            "SetAction" : "0",
-            "Scope" :  "Project",
-            "PromptText" : "Prompty prompt prompt.",
-            "HelpText" : "This is helpful."
-        },
-        {
-            "EnvVarName": "MyVariableMinDefn"            
-        },
-        {
-            "EnvVarName": "Standard1", 
-            "PromptText" : "Standard prompt prompt.",     # this should get ignored as it's not user defined.
-            "Default": "/tmp/standardconfig.apt"           
-        },
-        {
-            "EnvVarName": "MyUnsetVariable",
-            "Default": "It's set now!"
-
-        },
-        {
-            "EnvVarName": "APT_CONFIG_FILE",
-            "PromptText" : "Standard prompt prompt.",     # this should get ignored as it's not user defined.
-            "Default": "/tmp/standardconfig.apt"
-        }
-    ]
-
-    return projectParamConfig
-
-def GetLogger():
+def GetLogger(logfile='/tmp/logfile.txt'):
 
     
     import logging
@@ -223,27 +85,76 @@ def GetLogger():
     log = logging.getLogger('logger')
     log.setLevel(logging.DEBUG)     #  this is initial filter. Messages have to be above this to get anywhere.
 
-    formatter = logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s  ( from %(filename)s -> %(module)s) -> %(funcName)s')
+    formatter_debug = logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s  ( from %(filename)s -> %(module)s) -> %(funcName)s ) ')
+    formatter_info =  logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s ')
     
-    # fh - logging filehandler
-    fh = logging.FileHandler('/tmp/test.log', mode='w', encoding='utf-8')
+    # fh - logging filehandler, This is intened for debugging
+    ## Make sure dir exists 
+    logdir=os.path.dirname(logfile)
+
+    if ( not(os.path.exists(logdir))):
+        os.mkdir(logdir)
+        os.chmod(logdir,0o755)
+    else:
+        pass
+
+    fh = logging.FileHandler(logfile, mode='w', encoding='utf-8')
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
+    fh.setFormatter(formatter_debug)
     log.addHandler(fh)
 
-    # ch - logging streamhandler
+    # ch - logging streamhandler. This is what will appear on your stdout
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO) ## Change to DEBUG while testing. Should just be INFO normally
-    ch.setLevel(logging.DEBUG) ## Change to DEBUG while testing. Should just be INFO normally
-    ch.setFormatter(formatter)
+    #ch.setLevel(logging.DEBUG) ## Change to DEBUG while testing. Should just be INFO normally
+    ch.setFormatter(formatter_info)
     log.addHandler(ch)
 
     return log
 
+class LogMessage():
+    def __init__(self,logfile='/tmp/logfile.txt'):
+        
+        self.log=GetLogger(logfile)
+    
+    def __getFunctionNames(self):
+        import traceback
+        trace_b=traceback.extract_stack(limit=None)
+        
+        # Loop backwards through stack , to get function names
+        funcs=[]
+        for i in range( len(trace_b) - 1, -1, -1):
+            # If we hit '<module>', then stop. I assume this is as far as we need to go.
+            if trace_b[i][2] == '<module>':
+                break
+            funcs.append(trace_b[i][2])  
+
+        return(str(funcs))
+
+    def info(self, message):
+        """
+        This method is to log info
+        """
+        self.log.info(message)
+    
+    def debug(self, message):
+        """
+        This method is to log dubug information. 
+        It will include the list functions in current call stack.
+        """
+        self.log.debug(message + ' ---> ' + self.__getFunctionNames())
+    
+    def error(self, message):
+        """
+        This method is to log error
+        """
+        self.log.error(message )
+
+
 
 class EnvVarDefn():
     def __init__(self, EnvVarName,Category,JobType,Type,Default,SetAction,Scope,PromptText,HelpText):
-        #print('Initialising a LogMessage object.')
+        
         self.EnvVarName=EnvVarName
         self.Category=Category
         self.JobType=JobType
@@ -257,7 +168,7 @@ class EnvVarDefn():
     
 class EnvVarValue():
     def __init__(self, EnvVarName,EnvVarValue):
-        #print('Initialising a LogMessage object.')
+        
         self.EnvVarName=EnvVarName
         self.WhatIsThis='1'
         self.EnvVarValue=EnvVarValue        
@@ -278,16 +189,23 @@ class EnvVar():
         return separator.join( (self.EnvVarDefn.EnvVarName, self.EnvVarDefn.Category, self.EnvVarDefn.JobType, self.EnvVarDefn.Type, self.EnvVarDefn.Default, self.EnvVarDefn.SetAction, self.EnvVarDefn.Scope, self.EnvVarDefn.PromptText, self.EnvVarDefn.HelpText) ) 
     
     def print_value(self):
-        return 'This is my formatted value line'
+        #Create output line in format 
+        
+        # Format is: "<EnvVarName>"\1\"<Value>"
+        # e.g "MySetVariable"\1\"Hello"
+        separator='\\'
+         
+        return separator.join( ('"' + self.EnvVarValue.EnvVarName + '"', self.EnvVarValue.WhatIsThis, '"' + self.EnvVarValue.EnvVarValue + '"\n') ) 
+        
         
 
 def GetLinesFromDSParam(filePath='',sectionStartPattern=r'^\[EnvVarDefns\] *',sectionEndPattern=r'^\[.*\] *',pattern_toMatch=r'^.*$' ):
     """ 
-    Get lines from DSParam file
-    sectionStartPattern=r'^\[EnvVarDefns\] *'
-    sectionEndPattern=r'^\[.*\] *'    ## or end of file
-    
-    pattern_toMatch=r'^(\w*)\\User Defined\\.*$'
+    Get lines from DSParam file from the section defined by the section start pattern and the section end pattern.
+    Only returns lines that match pattern in pattern_toMatch ( which defaults to everything).
+
+    returns list of lines from DSParams file.
+
     """
 
     try:
@@ -310,23 +228,8 @@ def GetLinesFromDSParam(filePath='',sectionStartPattern=r'^\[EnvVarDefns\] *',se
         if sectionFound == True:
             if re.search(sectionEndPattern,line):
                 break
-            else:
-                # Format is: <EnvVarName>\<Category>\<JobType>\<Type>[+]\<Default>\<SetAction>\<Scope>\<PromptText>\<HelpText>
-                # DSIPC_OPEN_TIMEOUT\Parallel/Operator Specific\3\Number\30\3\Project\IPC Open timeout\Specifies the time allowed for server shared containers and Basic Transformers to complete initialization.
-                # APT_PXDEBUGGER_FORCE_SEQUENTIAL\Parallel\3\String\\2\Project\Debugger force sequential\Double quoted string containing a space separated list of operators to be forced to run sequentially when running in the debugger.
-                # APT_LINKOPT\Parallel/Compiler\3\String\-shared -m64\3\Project\Linker options\Linker options for Parallel transformer\
-                # APT_USE_CRLF\Parallel/Operator Specific\3\Boolean\0\4\Project\Default to Windows format files\Default to Windows format files (carriage return, line feed) if unspecified for sequential stages. Otherwise sequential files default to UNIX format.
-            
-
-                # Seems that some fields have a '\' at the end of the HelpText Field
-                fields = line.split('\\')
-
-                #Basic check to make sure record is as expected
-                if len(fields) != 9 and len(fields) != 10 :
-                    logMessage.error('Unexpected number of fields in line in DSParams. Expected 9. Found ' + str(len(fields)) + '. Line is :' + line)
-            
-                #Skip through til you get to the user definined variables
-                #pattern_UserDefined=r'^(\w*)\\User Defined\\.*$'
+            else:           
+                #Skip through until you get to lines that match your pattern
                 if re.search(pattern_toMatch, line) == None:
                     continue
 
@@ -340,132 +243,47 @@ def GetLinesFromDSParam(filePath='',sectionStartPattern=r'^\[EnvVarDefns\] *',se
 def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\w*)\\User Defined\\.*$'):
     """
     Get values from a DSParam file and load them to a format we can process
-    We only need to look at user defined variables, and variable the have a value set. ( Assume the rest can stay as default.)
+    
+    Get lines from DSParam file from the section defined by the section start pattern and the section end pattern.
+    Only returns lines that match pattern in pattern_toMatch ( which defaults to everything).
 
     sectionName  - which section of DSParams to look at. Defaults to EnvVarDefns
-    pattern_toMatch - limit results to only those that match certain pattern, e.g r'^(\w*)\\User Defined\\.*$'
+    pattern_toMatch - limit results to only those that match certain pattern ( maybe this should default to all?)
 
 
-    returns EnvVars objects
-
+    Return a dictionary of EnvVar objects
 
 
     """
     import re
 
-    ## Trying to set it up so it uses same object if it already exists
-    #logMessage=SetUpLog()
-    # If I just set it up in main script it works.
-    # Am I going to have to put this try block in every function that uses logging?
-    # Maybe just better to just import my LogMessages class each time and create as new local object.
-
-    #try:
-    #    logMessage.debug('Entered function GetDSParamValues')
-    #except:
-    #    logMessage=LogMessage()
-    #    logMessage.debug('Entered function GetDSParamValues')
-
-    
-
-    # def GetLinesFromDSParam(filePath='',sectionStartPattern=r'^\[EnvVarDefns\] *',sectionEndPattern=r'^\[.*\] *',pattern_toMatch=r'^.*$' ):
-    #     """ 
-    #     Get lines from DSParam file
-    #     sectionStartPattern=r'^\[EnvVarDefns\] *'
-    #     sectionEndPattern=r'^\[.*\] *'    ## or end of file
-        
-    #     pattern_toMatch=r'^(\w*)\\User Defined\\.*$'
-    #     """
-
-    #     try:
-    #         f = open(filePath)
-    #     except OSError:
-    #         return None
-
-
-    #     return_lines=[]
-    #     sectionFound=False
-
-    #     for line in f:
-    #         # We are only interested in the section '[EnvVarDefns]'
-    #         # If you find the start of the section, then set sectionFound to True, and continue processesing from next line
-    #         if re.search(sectionStartPattern,line):
-    #             sectionFound=True
-    #             continue
-            
-    #         # If you get to the end of the section, stop processing
-    #         if sectionFound == True:
-    #             if re.search(sectionEndPattern,line):
-    #                 break
-    #             else:
-    #                 # Format is: <EnvVarName>\<Category>\<JobType>\<Type>[+]\<Default>\<SetAction>\<Scope>\<PromptText>\<HelpText>
-    #                 # DSIPC_OPEN_TIMEOUT\Parallel/Operator Specific\3\Number\30\3\Project\IPC Open timeout\Specifies the time allowed for server shared containers and Basic Transformers to complete initialization.
-    #                 # APT_PXDEBUGGER_FORCE_SEQUENTIAL\Parallel\3\String\\2\Project\Debugger force sequential\Double quoted string containing a space separated list of operators to be forced to run sequentially when running in the debugger.
-    #                 # APT_LINKOPT\Parallel/Compiler\3\String\-shared -m64\3\Project\Linker options\Linker options for Parallel transformer\
-    #                 # APT_USE_CRLF\Parallel/Operator Specific\3\Boolean\0\4\Project\Default to Windows format files\Default to Windows format files (carriage return, line feed) if unspecified for sequential stages. Otherwise sequential files default to UNIX format.
-                
-
-    #                 # Seems that some fields have a '\' at the end of the HelpText Field
-    #                 fields = line.split('\\')
-
-    #                 #Basic check to make sure record is as expected
-    #                 if len(fields) != 9 and len(fields) != 10 :
-    #                     logMessage.error('Unexpected number of fields in line in DSParams. Expected 9. Found ' + str(len(fields)) + '. Line is :' + line)
-                
-    #                 #Skip through til you get to the user definined variables
-    #                 #pattern_UserDefined=r'^(\w*)\\User Defined\\.*$'
-    #                 if re.search(pattern_toMatch, line) == None:
-    #                     continue
-
-                
-    #             # This is if its EnvVarDefn that we're getting.
-    #             return_lines.append(line)
-        
-    #     f.close
-    #     return(return_lines)
-
-
-
-
-
-
-
     try: 
         logMessage.debug('Entered function GetDSParamValues')
-        #logMessage.debug('We are reading values from ' + filePath + ' .')
+        logMessage.debug('We are reading values from ' + filePath + ' .')
     except NameError:
-        print('This is the except NameError')
+        logMessage.debug('This is the except NameError')
     except:
-        print('this is just general except.')
+        logMessage.debug('this is just general except.')
     else:
-        print('this is when no exception happened.')
+        logMessage.debug('this is when no exception happened.')
     finally:
-        print('This is the finally section. It will aways run')
-        print('This is the finally section. It will aways run')
+        logMessage.debug('This is the finally section. It will aways run')
+        logMessage.debug('This is the finally section. It will aways run')
     
-    logMessage.info('We got to here.')
+    
 
-    # First, try to open the file
-    #try:
-    #    f = open(filePath)
-    #except OSError:
-    #    return None
-
-    # Now process the file
-    #characters = {}
-    #sectionStartPattern=r'^\[EnvVarDefns\] *'
-    sectionStartPattern=r'^\[' + sectionName + '\] *'
-    sectionEndPattern=r'^\[.*\] *'    ## or end of file
-    # pattern_toMatch=r'^(\w*)\\User Defined\\.*$'  - this is now a param
-    #envvar=[]
+  
+    # Get the EnvVarDefinitions from template DSParams file
+    sectionStartPattern=r'^\[' + sectionName + r'\] *'
+    sectionEndPattern=r'^\[.*\] *'    ## or end of file    
     EnvVarDefns_lines=GetLinesFromDSParam(filePath,sectionStartPattern, sectionEndPattern, pattern_toMatch )
+    # and load them int docitonary  -key env_var_name  --> EnvVarObject
     EnvVarDefns={}
     for line in EnvVarDefns_lines:
-        #EnvVarDefn(EnvVarName = fields[0], Category= fields[1], JobType= fields[2], Type= fields[3], Default= fields[4], SetAction=fields[5], Scope=fields[6], PromptText=fields[7], HelpText=fields[8] ) )
-        #EnvVarDefn(EnvVarName = fields[0], Category= fields[1], JobType= fields[2], Type= fields[3], Default= fields[4], SetAction=fields[5], Scope=fields[6], PromptText=fields[7], HelpText=fields[8] ) )
         EnvVarName, Category, JobType, Type, Default, SetAction, Scope, PromptText, HelpText  = line.split('\\')[:9]
         EnvVarDefns[EnvVarName] = EnvVarDefn(EnvVarName, Category, JobType, Type, Default, SetAction, Scope, PromptText, HelpText)
 
-
+    # Get the EnvVarValues from source DSParams file
     sectionStartPattern=r'^\[EnvVarValues\] *'
     sectionEndPattern=r'^\[.*\] *'    ## or end of file
     #pattern_toMatch=r'^(\w*)\\User Defined\\.*$'
@@ -473,22 +291,17 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
 
     EnvVarValues={}
     for line in EnvVarValues_lines:
-        envVarNameQuoted, parp, envVarValue = line.split('\\')
+        #envVarNameQuoted, not_required, envVarValue = line.split('\\')[0]
+        envVarNameQuoted = line.split('\\')[0]
+        envVarValue = line.split('\\')[2]
         envVarName = envVarNameQuoted.replace('"','')
         EnvVarValues[envVarName] = EnvVarValue(envVarNameQuoted, envVarValue)
 
 
-    ## So curently we have all UserDefinedEnvVarDefns_lines and all EnvVarValues. 
+    ## So now we have all EnvVarDefns_lines and all EnvVarValues. from the source DSParams file.
 
     
     ## return a dictionary of EnvVar objects
-
-    ## How to update if exists - and just update the relent part?
-    #class EnvVar():
-    #def __init__(self, EnvVarName,EnvVarDefn,EnvVarValue ):
-    #    self.EnvVarName=EnvVarName
-    #    self.EnvVarDefn=EnvVarDefn
-    #    self.EnvVarValue=EnvVarValue
     EnvVars={}
     for env_var_name, envVarDefn in EnvVarDefns.items():
         if env_var_name in EnvVars:
@@ -524,63 +337,32 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
 def HandleInputParameters():
     
     this_script_path=(os.path.dirname(sys.argv[0]))
-    #print('this_script_path:' + this_script_path)
+    
     # this_script_name=(os.path.basename(sys.argv[0]))
     datadir=os.path.join(this_script_path,"data") # Ah!  you don't want the '/' in your args - makes sense!
-    #print('datadir:' + datadir)
     
-    default_logfile=os.path.join(datadir,"syslog_example")
-    #print('default is :' + default_logfile)
+    
+    default_logfile=os.path.join(datadir,"default_log_file.txt")
+    
 
     #default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
     default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.example'))
+    default_project_specific_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','project_specific_project_params.json'))
+    default_standard_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','standard_project_params.json'))
     # Set up input options
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
-    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/01 .", default='/iis/01')
-    parser.add_argument("--template-dsparam", type=str, dest="template_dsparam", help="the template DSParam file", default=default_DSParams_template)
-    parser.add_argument("--project-name", type=str, dest="project_name", help="project to check, and apply changes to ", default='dstage1')
+    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/01 .", default='/iis/01', required=False) # Setting all to false here as it's making testing easier
+    parser.add_argument("--template-dsparam", type=str, dest="template_dsparam", help="the template DSParam file", default=default_DSParams_template,required=False)
+    parser.add_argument("--project-name", type=str, dest="project_name", help="project to check, and apply changes to ", default='dstage1', required=False)
+    parser.add_argument("--project-specific-params-file", type=str, dest="project_specific_params_file", help="json file for project specific params", default=default_project_specific_params)
+    parser.add_argument("--standard-params-file", type=str, dest="standard_params_file", help="json file for standard params", default=default_standard_params)
     
     
     return parser
 
-class LogMessage():
-    def __init__(self):
-        #print('Initialising a LogMessage object.')
-        self.log=GetLogger()
-    
-    def __getFunctionNames(self):
-        import traceback
-        trace_b=traceback.extract_stack(limit=None)
-        
-        # Loop backwards through stack , to get function names
-        funcs=[]
-        for i in range( len(trace_b) - 1, -1, -1):
-            # If we hit '<module>', then stop. I assume this is as far as we need to go.
-            if trace_b[i][2] == '<module>':
-                break
-            funcs.append(trace_b[i][2])  
 
-        return(str(funcs))
-
-    def info(self, message):
-        """
-        This method is to log info
-        """
-        self.log.info(message + ' ---> ' + self.__getFunctionNames())
-    
-    def debug(self, message):
-        """
-        This method is to log info
-        """
-        self.log.debug(message + ' ---> ' + self.__getFunctionNames())
-    
-    def error(self, message):
-        """
-        This method is to log error
-        """
-        self.log.error(message + ' ---> ' + self.__getFunctionNames())
 
 
 
@@ -650,11 +432,14 @@ def GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath='' , params_to_update=
     ##    
     for variable_definition in params_to_update:
 
-        
+        ## ignore entries that do not contain 'EnvVarName' ( ie. skip past comments or any other invalid entries)
+        if 'EnvVarName'not in variable_definition:
+            continue
+
         ## Look for the variable in the EnvVar object
         envvar_name=variable_definition['EnvVarName']
         if envvar_name in myTemplateEnvVar:
-            print(envvar_name + ' exists in myTemplateEnvVar')
+            logMessage.info(envvar_name + ' exists in myTemplateEnvVar')
             # Copy it to my output env var - nb. This is just creating new obj referencing the original..so updates will be seen in both! ( This should not matter though, in current process)
             myOutputEnvVar_ToApply[envvar_name]=myTemplateEnvVar[envvar_name]
 
@@ -692,7 +477,7 @@ def GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath='' , params_to_update=
         else:
             ## This variable does not already exist, so will be created as user defined
             ## e.g. MyUnsetVariable\User Defined\-1\String\\0\Project\This is my unset variable - it has no value set.\
-            print(envvar_name + ' does not exists in myEnvVar')
+            logMessage.debug(envvar_name + ' does not exist in myEnvVar')
 
             ## Create new User Defined Variable based on contents of variable_definition
 
@@ -797,7 +582,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     ##  Read each line from template file
     currentSection=None
     ## Build up the pattern for matching the EnvVarDefn format
-    pattern_separator='\\'
+    pattern_separator=r'\\'
     pattern_EnvVarName=r'(\w*)'
     pattern_Category=r'(\w*[/\w ]*)'
     pattern_JobType=r'([-]*\d)'
@@ -808,148 +593,190 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     pattern_PromptText=r'(.*?)'
     pattern_HelpText=r'(.*)$'
 
-    #EnvVarDefnFormat=r'^(\w*)\\(\w*[/\w ]*)\\(\d)\\(\w*[/\w]*)\\(.*?)\\.*'; result = re.search(EnvVarDefnFormat, line); print(result[5])
+    
     EnvVarDefnFormat=r'^' 
     EnvVarDefnFormat+=pattern_EnvVarName
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_Category
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_JobType
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_Type
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_Default
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_SetAction
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_Scope
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_PromptText
-    EnvVarDefnFormat+=r'\\'
+    EnvVarDefnFormat+=pattern_separator
     EnvVarDefnFormat+=pattern_HelpText
 
+    ## Build up the pattern for matching the EnvVarValue format
+    ## "MySetVariable"\1\"Hello"
+    EnvVarValueFormat=r'^"(\w*)"\\(1)\\"(.*)"' 
+    
+    def OutputDebugInfoForUnmatchedLineFormat():
+        """
+        This is just to help understand what patterns are being matched when line does not match format we expect.
+        Should not really be needed.
+        """
+        EnvVarDefnFormat=r'^' + pattern_EnvVarName
+        result = re.search(EnvVarDefnFormat, line)
+        logMessage.debug('EnvVarName :  ' + result[1])
+        
+        EnvVarDefnFormat+=r'\\' + pattern_Category
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('Category :  ' + result[2])
+
+        EnvVarDefnFormat+=r'\\' + pattern_JobType
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('JobType :  ' + result[3])
+
+        EnvVarDefnFormat+=r'\\' + pattern_Type
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('Type :  ' + result[4])
+
+        EnvVarDefnFormat+=r'\\' + pattern_Default
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('Default :  ' + result[5])
+
+        EnvVarDefnFormat+=r'\\' + pattern_SetAction
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('SetAction :  ' + result[6])
+
+        EnvVarDefnFormat+=r'\\' + pattern_Scope
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('Scope :  ' + result[7])
+
+        EnvVarDefnFormat+=r'\\' + pattern_PromptText
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('PromptText :  ' + result[8])
+
+        EnvVarDefnFormat+=r'\\' + pattern_HelpText
+        result = re.search(EnvVarDefnFormat, line)
+        if result == None:
+            return
+        logMessage.debug('HelpText :  ' + result[9])
+
+
+    def SectionChangeLogic(previousSection='', amendedEnvVars={}, f_temp=''):
+        """
+        This logic need to be called in the loop, and when the loop finishes.
+        Need to check...is f_temp here referencing the same object as f_temp outside this functino?  ( That's what I want)
+
+        """
+        # If section change, and previous section was EnvVarDefns, need to make sure any EnvVarDefns which have not been processed from amendedEnvVars are written out.
+        if previousSection == 'EnvVarDefns':
+            
+
+            # using items() to get all items  
+            # lambda function is passed in key to perform sort by key  
+            sorted_amendedEnvVars = {key: val for key, val in sorted(amendedEnvVars.items(), key = lambda ele: ele[0])} 
+            #for env_var_name, env_var_object in amendedEnvVars.items():
+            for env_var_name, env_var_object in sorted_amendedEnvVars.items():
+                logMessage.debug('processing ' + env_var_name )
+                if env_var_object.EnvVarDefn != None:
+                    logMessage.debug('processing definition for  ' + env_var_name )
+                    # Write the definition of the new variable out
+                    f_temp.write(env_var_object.print_definition())
+                    ## Need to add in bit for adding these ( user defined ) variable definitions
+                    ### Then need to add code for setting the values in the values section.
+        
+        if previousSection == 'EnvVarValues':
+            sorted_amendedEnvVars = {key: val for key, val in sorted(amendedEnvVars.items(), key = lambda ele: ele[0])} 
+            for env_var_name, env_var_object in sorted_amendedEnvVars.items():
+                logMessage.debug('processing ' + env_var_name )
+                if env_var_object.EnvVarValue != None:
+                    logMessage.debug('processing value  for  ' + env_var_name )
+                    # Write the values of the new variable out
+                    f_temp.write(env_var_object.print_value())
+                  
+            
+
+
     for line in f:
-        
-        
+                
         ## Work out what section we're in.
         sectionStartPattern=r'^\[([\w-]*)\]'
         result = re.search(sectionStartPattern,line)
         if result != None:
-            sectionFound=True
+            
             previousSection=currentSection # When Section changes, save off the previousSection name. 
             currentSection=result[1]
 
+            SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
 
-            # If section change, and previous section was EnvVarDefns, need to make sure any EnvVarDefns which have not been processed from amendedEnvVars are written out.
-            if previousSection == 'EnvVarDefns':
-                
-                for env_var_name, env_var_object in amendedEnvVars.items():
-                    print('processing ' + env_var_name )
-                    if env_var_object.EnvVarDefn != None:
-                        print('processing definition for  ' + env_var_name )
-                        #print('THIS IS WHERE YOU ARE UP TO STEPHEN! ')
-                        ## Need to add in bit for adding these ( user defined ) variable definitions
-                        ### Then need to add code for setting the values in the values section.
-
-
-            logMessage.info('Processing ' + currentSection)
         else:
+            if currentSection == 'EnvVarValues':
+                ## Check it matches the format we expect ( otherwise just allow line to be written out unchanged).
+                           
+                result = re.search(EnvVarValueFormat, line)
+
+                if result != None:
+                    envvar_name=result[1]
+                    # Check if the variable is included in our variables that are to be amended.
+                    if envvar_name in amendedEnvVars:
+                        line=amendedEnvVars[envvar_name].print_value()
+                        amendedEnvVars[envvar_name].EnvVarValue = None
+
+
+                
+
+
             if currentSection == 'EnvVarDefns':
 
-                # Check it matches our expected format
-                #EnvVarDefnFormat=r'^(\w*)\(\w*)\3\String\\2\Project\Debugger force sequential\Double quoted string containing a space separated list of operators to be forced to run sequentially when running in the debugger.
-                #EnvVarDefnFormat=r'^(\w*)\\(\w*)\\(\d)\\(\w)\\\\(\d)\\(\w)\\([\w\.]*)'
-                # See if this env var defn is amended by our config
-                #print(project_specific_params)
+                # Check it matches our expected format              
                 result = re.search(EnvVarDefnFormat, line)
                 if result != None:
-                    logMessage.info('Processing ' + result[1])
+                    logMessage.debug('Processing ' + result[1])
 
                     #First, does the envvar exist in either the 'standard' or 'project specific' ( ie. does it need changing)
                     # Check if it's in amendedEnvVars
                     envvar_name=result[1]
-                    envvar_category=result[2]
-                    envvar_jobtype=result[3]
-                    envvar_type=result[4]
-                    envvar_default=result[5]
-                    envvar_set_action=result[6]
-                    envvar_scope=result[7]
-                    envvar_prompt_text=result[8]
-                    envvar_help_text=result[9]
-
-
-                    #Could change this to only update if user defined - as they are only ones that should be able to change definition.  Should already be handled though, so doesn't matter really.
-                    ## Remove the definition from amendedEnvVars once you've processed it. ( but leave that value - we need to set that later)
+                    
+                    # See if this env var defn is amended by our config
+                    # Could change this to only update if user defined - as they are only ones that should be able to change definition.  Should already be handled though, so doesn't matter really.
                     if envvar_name in amendedEnvVars:
                         line=amendedEnvVars[envvar_name].print_definition()
+                        # Remove the definition from amendedEnvVars once you've processed it ( so we know not to add it to end of the section in the output dsparms file). ( but leave the value - we need to set that later)
                         amendedEnvVars[envvar_name].EnvVarDefn = None
 
 
                 else:
                     logMessage.info('Line does not match expected format for a variable' + line)
                     # Would be nice to move this debug code to some other function, to keep this code a bit shorter. 
-                    EnvVarDefnFormat=r'^' + pattern_EnvVarName
-                    result = re.search(EnvVarDefnFormat, line)
-                    logMessage.debug('EnvVarName :  ' + result[1])
+                    OutputDebugInfoForUnmatchedLineFormat()
                     
-                    EnvVarDefnFormat+=r'\\' + pattern_Category
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('Category :  ' + result[2])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_JobType
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('JobType :  ' + result[3])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_Type
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('Type :  ' + result[4])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_Default
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('Default :  ' + result[5])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_SetAction
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('SetAction :  ' + result[6])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_Scope
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('Scope :  ' + result[7])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_PromptText
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('PromptText :  ' + result[8])
-
-                    EnvVarDefnFormat+=r'\\' + pattern_HelpText
-                    result = re.search(EnvVarDefnFormat, line)
-                    if result == None:
-                        continue
-                    logMessage.debug('HelpText :  ' + result[9])
-
-
-                # Then go through remaining variables from our config to add them on 
 
         f_temp.write(line)
             
 
 
 
+    # At end of file ( ie. the end of the EnvVarValues section), we need to add on any new values
+    #  This logic needs to be called from inside loop ( on section change)  and here too
+    previousSection=currentSection # When Section changes, save off the previousSection name. 
+    currentSection='End of file'
+    SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
 
     f_temp.close() # This will close ( and finish writing to ) the temp file
+
     # Now compare the temp file and the target DSParam file, and replace the target DSParam with new temp file if there are differences. ( set the correct ownership and permissions first)
     import pwd
     import grp 
@@ -1030,14 +857,19 @@ def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
 ##   Any function should fit on 1 screen ( ish) ( ideally)
 ##   Each function should be easily describable so we know what it does
 
-logMessage=LogMessage()
+
 parser=HandleInputParameters()
 args = parser.parse_args()
+logMessage=LogMessage(args.logfile)
+
 
 logMessage.info('logfile is :' + args.logfile)
 logMessage.info('install_base is :' + args.install_base )
 logMessage.info('template_dsparam is :' + args.template_dsparam )
 logMessage.info('project_name is :' + args.project_name )
+
+
+
 
 # Check you will have permissions to change the files as required
 import os
@@ -1059,16 +891,14 @@ except KeyError:
 if not os.geteuid() == 0 and not os.getuid() == uid:
     sys.exit("\nOnly root or the datastage admin can run this script\n")
 
-## Get the standard parameters
+# Get the standard parameters
+standard_params=GetProjectParamConfig(args.standard_params_file)
 
-print('Getting standard parameters is not coded yet.')
 
-## Get the project specific parameters
-projectParamConfig='/tmp/test1' # 
-standardParamConfig='/tmp/test1'
-project_specific_params=GetProjectParamConfig(projectParamConfig)
-standard_params=GetProjectParamConfig(standardParamConfig)
-standard_params=GetProjectParamConfig_DodgyCopyForStandardParamsTest(standardParamConfig) # this is just til I get GetProjectParamConfig working correctly from config file ( its just hardcoded at the moment).
+# Get the project specific parameters
+project_specific_params=GetProjectParamConfig(args.project_specific_params_file)
+
+
 
 ## Need to combine those ( project specific overrides standard)
 
@@ -1083,13 +913,8 @@ project_list=['dstage1']
 
 for project in project_list:
 
-    dsparams_path='/tmp/stetest1_DSParams1'
+    dsparams_path='/tmp/stetest1_DSParams1' # - what's this? Need to replace this with code to work out path to DSParams file for project.
     CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
-    #ApplySettingsToTemplateDSParams(args.template_dsparam,project_specific_params)
+    
 
-# Create new temp DSParams files
-
-
-
-# Copy new temp DSParams files with current, and replace if any differences
 

@@ -1,0 +1,28 @@
+[
+    {
+        "Comment" : "This is my comment on how to use this file. It has none of the required fields, and so should be ignored by the scripts that process it."
+
+    },
+    {
+        "Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
+        "EnvVarName": "MyStandardVariable1",
+        "Category": "User Defined",
+        "JobType": "-1", 
+        "Type": "String",
+        "Default": "default_value",
+        "SetAction" : "0",
+        "Scope" :  "Project",
+        "PromptText" : "Prompt for a standard variable."
+    },
+    {
+        "Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
+        "EnvVarName": "MyStandardVariable2",
+        "Category": "User Defined",
+        "JobType": "-1", 
+        "Type": "String",
+        "Default": "default_value",
+        "SetAction" : "0",
+        "Scope" :  "Project",
+        "PromptText" : "Prompt for a standard variable2."
+    }
+]
