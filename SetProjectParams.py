@@ -21,6 +21,7 @@ This script will
 import sys
 import argparse
 
+
 import re
 import os 
 
@@ -149,11 +150,11 @@ class LogMessage():
         """
         self.log.error(message )
 
-    def warn(self, message):
+    def warning(self, message):
         """
         This method is to log warnings
         """
-        self.log.warn(message )
+        self.log.warning(message )
 
 
 
@@ -355,7 +356,7 @@ def HandleInputParameters():
     
 
     #default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
-    default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.example'))
+    default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
     default_project_specific_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','project_specific_project_params.json'))
     default_standard_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','standard_project_params.json'))
     # Set up input options
@@ -880,12 +881,35 @@ def main(arrgv=None):
     ##   Any function should fit on 1 screen ( ish) ( ideally)
     ##   Each function should be easily describable so we know what it does
 
+    import os
+    import pwd
+    import grp 
+
 
     parser=HandleInputParameters()
     args = parser.parse_args()
 
     global logMessage # Make it available to all 
     logMessage=LogMessage(args.logfile)
+
+    
+    #Check input params
+    errorfound=False
+    if not os.path.exists(args.template_dsparam):
+        errorfound=True
+        logMessage.info('Template DSParams file not found at: ' + args.template_dsparam)
+    
+    if not os.path.exists(args.standard_params_file):
+        errorfound=True
+        logMessage.info('Standard DSParams file not found at: ' + args.standard_params_file)
+    
+    if not os.path.exists(args.project_specific_params_file):
+        errorfound=True
+        logMessage.info('Project specific DSParams file not found at: ' + args.project_specific_params_file)
+
+    if errorfound:
+        sys.exit("\nInput parameter failed validation. See previous messages.\n")
+
 
     
     
@@ -900,9 +924,7 @@ def main(arrgv=None):
 
 
     # Check you will have permissions to change the files as required
-    import os
-    import pwd
-    import grp 
+ 
 
     try: 
         adminName=GetDSAdminName()
@@ -949,7 +971,7 @@ def main(arrgv=None):
             
             CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
         else:
-            logMessage.warn('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
+            logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
 
         
     
