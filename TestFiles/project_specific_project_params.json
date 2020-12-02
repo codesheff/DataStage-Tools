@@ -53,5 +53,9 @@
         "SetAction" : "0",
         "Scope" :  "Project",
         "PromptText" : "Prompt for a standard variable2. This has been changed in project specific config file."
-    }
+    },
+    {
+        "EnvVarName": "NewProjVar",
+        "Default": "This is new one created in project specific config"
+    }   
 ]
