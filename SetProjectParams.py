@@ -871,10 +871,32 @@ def GetProjectPath(project_name=''):
     Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
     """
     import os
-    project_base_path='/iis/01/InformationServer/Server/Projects/'
-    project_path=os.path.join(project_base_path, project_name )
+    import subprocess
+    
+    import re
 
-    return project_path
+    #project_base_path='/iis/01/InformationServer/Server/Projects/'
+    #project_path=os.path.join(project_base_path, project_name )
+
+    dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
+    project_name='dstage1'
+    dsadm_user='dsadm'
+    command='source /iis/01/InformationServer/Server/DSEngine/dsenv; /iis/01/InformationServer/Server/DSEngine/bin/dsjob -projectinfo ' + project_name
+    sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
+    
+    #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
+    result = subprocess.run([sudo_command] , capture_output=True, shell=True, encoding="UTF-8")
+
+
+
+    if result.returncode != 0:
+        return()
+    else:
+        pattern=r'^Project Path\t: (.*)'
+        projectpath = re.search(pattern,result.stdout)[1]
+        return(projectpath)
+
+
     
 
 def main(arrgv=None):
