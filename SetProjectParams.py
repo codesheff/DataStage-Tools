@@ -4,8 +4,7 @@
 STILL TO DO:
   Better log info messages
   Work out path to DSParams file ( or take that in as param?) - maybe either give project name or give path to the DSParam file
-  Handle multiple projects  ( list of projects? 'all' projects?)
-  Get DSParams path for project name
+ 
   Got through and tidy up. Make sure each function can be described easily.
   See if you can create unit tests ( is it appropriate for this?)
   Check what can go into some SharedFunctions module ( probably want a better name for that)
@@ -21,6 +20,7 @@ This script will
 """
 import sys
 import argparse
+
 
 import re
 import os 
@@ -149,6 +149,13 @@ class LogMessage():
         This method is to log error
         """
         self.log.error(message )
+
+    def warning(self, message):
+        """
+        This method is to log warnings
+        """
+        self.log.warning(message )
+
 
 
 
@@ -335,6 +342,9 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
 
 
 def HandleInputParameters():
+
+
+    # read this, and look at mutually exclusive arrgs  https://linuxconfig.org/how-to-use-argparse-to-parse-python-scripts-parameters
     
     this_script_path=(os.path.dirname(sys.argv[0]))
     
@@ -346,16 +356,20 @@ def HandleInputParameters():
     
 
     #default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
-    default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.example'))
+    default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
     default_project_specific_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','project_specific_project_params.json'))
     default_standard_params=os.path.abspath(os.path.join(this_script_path, 'TestFiles','standard_project_params.json'))
     # Set up input options
     
     parser = argparse.ArgumentParser()
+    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/01 .", default='/iis/01', required=True) # Setting all to false here as it's making testing easier
+    parser.add_argument("--project-name", action='append', type=str, dest="project_list", help="project to check, and apply changes to ", required=True)
+
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
-    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/01 .", default='/iis/01', required=False) # Setting all to false here as it's making testing easier
+    
     parser.add_argument("--template-dsparam", type=str, dest="template_dsparam", help="the template DSParam file", default=default_DSParams_template,required=False)
-    parser.add_argument("--project-name", type=str, dest="project_name", help="project to check, and apply changes to ", default='dstage1', required=False)
+    
+    
     parser.add_argument("--project-specific-params-file", type=str, dest="project_specific_params_file", help="json file for project specific params", default=default_project_specific_params)
     parser.add_argument("--standard-params-file", type=str, dest="standard_params_file", help="json file for standard params", default=default_standard_params)
     
@@ -400,14 +414,17 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
         else:
             # backup the original file
             t = time.localtime()
-            backupfile=orig_file + time.strftime('%b-%d-%Y_%H%M', t)
+            backupfile=orig_file + time.strftime('%Y%M%d_%H%M%S', t)
             shutil.copyfile(orig_file,backupfile)
+        
     else:
         logMessage.info(orig_file + ' - does not exist. Creating new file.')
     
     ## Only got to here if does not match  (ie new or different)
     logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
-    shutil.copyfile(new_temp_file, orig_file)
+    #shutil.copyfile(new_temp_file, orig_file)
+    shutil.move(new_temp_file, orig_file)
+    
     return 1
 
 
@@ -538,8 +555,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     #UserDefinedEnvVarDefns, EnvVarValues = GetDSParamValues(templateDSParamsPath)
     
     ## Get dictionary of all variables to amend.
-    amendedEnvVars=GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath=args.template_dsparam , params_to_update=standard_params)
-    amendedEnvVars=GetAmendedEnvVars(origEnvVar=amendedEnvVars, templateDSParamsPath=args.template_dsparam , params_to_update=project_specific_params)
+    amendedEnvVars=GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
+    amendedEnvVars=GetAmendedEnvVars(origEnvVar=amendedEnvVars, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params)
 
 
     
@@ -776,9 +793,17 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
     # Now compare the temp file and the target DSParam file, and replace the target DSParam with new temp file if there are differences. ( set the correct ownership and permissions first)
     import pwd
-    uid=pwd.getpwnam(GetDSAdminName()).pw_uid
     import grp 
-    gid=grp.getgrnam(GetDSAdminName()).gr_gid
+
+    try: 
+        adminName=GetDSAdminName()
+        adminGroup=GetDSAdminGroup()
+        
+        uid=pwd.getpwnam(adminName).pw_uid  
+        gid=grp.getgrnam(adminGroup).gr_gid
+    except KeyError:
+        logMessage.error('Unable to find uid or gid for ' + adminName )
+        return None
 
     try:
         os.chown(fp.name,uid,gid)
@@ -795,7 +820,11 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
     ReplaceOldWithNewFile(orig_file=dsparams_path, new_temp_file=fp.name)
 
-    fp.close() # This will close and delete the temp file
+    try: 
+        fp.close() # This will close and delete the temp file
+    except:
+        ## file has been removed already by move done in ReplaceOldwithNewFile
+        pass 
     f.close
     
 
@@ -804,75 +833,149 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
 
 
-def GetDSAdminName():
+def GetDSAdminName(version_xml='/iis/01/InformationServer/Version.xml'):
     """
     This should be the standard way of getting the DataStage admin user name
     """
-    #return 'isdsad01'
-    return 'stedo'
 
-def GetDSAdminGroup():
-    """
-    This should be the standard way of getting the DataStage admin users group
-    """
-    return 'dsadmgrp'
-    #return 'stedo'
+    from datastage_functions import GetValueFromVersionXML
+
+    #version_xml='/iis/01/InformationServer/Version.xml'
+    variable_name='datastage.user.name'
+    value=GetValueFromVersionXML(version_xml,variable_name )
 
 
-##  Main line
-
-## The test ...  If I can't read this and understand what's going on ...then it needs re-writing
-##   Any function should fit on 1 screen ( ish) ( ideally)
-##   Each function should be easily describable so we know what it does
-
-
-parser=HandleInputParameters()
-args = parser.parse_args()
-logMessage=LogMessage(args.logfile)
-
-
-logMessage.info('logfile is :' + args.logfile)
-logMessage.info('install_base is :' + args.install_base )
-logMessage.info('template_dsparam is :' + args.template_dsparam )
-logMessage.info('project_name is :' + args.project_name )
-
-
-
-
-# Check you will have permissions to change the files as required
-import os
-import pwd
-uid=pwd.getpwnam(GetDSAdminName()).pw_uid
-import grp 
-gid=grp.getgrnam(GetDSAdminGroup()).gr_gid
-
-if not os.geteuid() == 0 and not os.getuid() == uid:
-    sys.exit("\nOnly root or the datastage admin can run this script\n")
-
-# Get the standard parameters
-standard_params=GetProjectParamConfig(args.standard_params_file)
-
-
-# Get the project specific parameters
-project_specific_params=GetProjectParamConfig(args.project_specific_params_file)
-
-
-
-## Need to combine those ( project specific overrides standard)
-
-
-
-# Build up new DSParams file from template, plus the standard and project specific Param config, and if compare/fix the DSParams of the target project
-
-project_list=['dstage1']
-
-
-
-
-for project in project_list:
-
-    dsparams_path='/tmp/stetest1_DSParams1' # - what's this? Need to replace this with code to work out path to DSParams file for project.
-    CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
     
 
 
+    return value
+    #return 'stedo'
+
+def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
+    """
+    This should be the standard way of getting the DataStage admin users group
+    """
+
+    from datastage_functions import GetValueFromVersionXML
+
+    
+    variable_name='ds.admin.gid'
+    value=GetValueFromVersionXML(version_xml,variable_name )
+    return value
+
+def GetProjectPath(project_name=''):
+    """
+    This needs recoding to work this out correctly.
+    """
+    import os
+    project_base_path='/iis/01/InformationServer/Server/Projects/'
+    project_path=os.path.join(project_base_path, project_name )
+
+    return project_path
+    
+
+def main(arrgv=None):
+    ##  Main line
+
+    ## The test ...  If I can't read this and understand what's going on ...then it needs re-writing
+    ##   Any function should fit on 1 screen ( ish) ( ideally)
+    ##   Each function should be easily describable so we know what it does
+
+    import os
+    import pwd
+    import grp 
+
+
+    parser=HandleInputParameters()
+    args = parser.parse_args()
+
+    global logMessage # Make it available to all 
+    logMessage=LogMessage(args.logfile)
+
+    
+    #Check input params
+    errorfound=False
+    if not os.path.exists(args.template_dsparam):
+        errorfound=True
+        logMessage.info('Template DSParams file not found at: ' + args.template_dsparam)
+    
+    if not os.path.exists(args.standard_params_file):
+        errorfound=True
+        logMessage.info('Standard DSParams file not found at: ' + args.standard_params_file)
+    
+    if not os.path.exists(args.project_specific_params_file):
+        errorfound=True
+        logMessage.info('Project specific DSParams file not found at: ' + args.project_specific_params_file)
+
+    if errorfound:
+        sys.exit("\nInput parameter failed validation. See previous messages.\n")
+
+
+    
+    
+
+
+    logMessage.info('logfile is :' + args.logfile)
+    logMessage.info('install_base is :' + args.install_base )
+    logMessage.info('template_dsparam is :' + args.template_dsparam) 
+    logMessage.info('project_list is :' + str(args.project_list) )
+
+
+
+
+    # Check you will have permissions to change the files as required
+ 
+
+    try: 
+        adminName=GetDSAdminName()
+        adminGroup=GetDSAdminGroup()
+        
+        uid=pwd.getpwnam(adminName).pw_uid  
+        #gid=grp.getgrnam(adminGroup).gr_gid
+    except KeyError:
+        logMessage.error('Unable to find uid or gid for ' + adminName )
+        sys.exit("\nUser not found.\n")
+
+
+
+    if not os.geteuid() == 0 and not os.getuid() == uid:
+        sys.exit("\nOnly root or the datastage admin can run this script\n")
+
+    # Get the standard parameters
+    standard_params=GetProjectParamConfig(args.standard_params_file)
+
+
+    # Get the project specific parameters
+    project_specific_params=GetProjectParamConfig(args.project_specific_params_file)
+
+
+
+    ## Need to combine those ( project specific overrides standard)
+
+
+
+    # Build up new DSParams file from template, plus the standard and project specific Param config, and if compare/fix the DSParams of the target project
+
+    
+    project_list=args.project_list
+
+
+
+    import os 
+    for project in project_list:
+
+        dsparams_path=os.path.join(GetProjectPath(project),'DSParams')
+
+        if os.path.exists(dsparams_path):
+            logMessage.info('Processing ' + dsparams_path)
+            
+            CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
+        else:
+            logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
+
+        
+    
+
+if __name__=="__main__":
+    import sys
+    main()
