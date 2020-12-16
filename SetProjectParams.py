@@ -268,14 +268,14 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
         logMessage.debug('Entered function GetDSParamValues')
         logMessage.debug('We are reading values from ' + filePath + ' .')
     except NameError:
-        logMessage.debug('This is the except NameError')
-    except:
-        logMessage.debug('this is just general except.')
-    else:
-        logMessage.debug('this is when no exception happened.')
-    finally:
-        logMessage.debug('This is the finally section. It will aways run')
-        logMessage.debug('This is the finally section. It will aways run')
+        print('Unable to logMessage')
+    #except:
+    #    logMessage.debug('this is just general except.')
+    #else:
+    #    logMessage.debug('this is when no exception happened.')
+    #finally:
+    #    logMessage.debug('This is the finally section. It will aways run')
+    #    logMessage.debug('This is the finally section. It will aways run')
     
     
 
