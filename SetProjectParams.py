@@ -865,7 +865,7 @@ def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
     value=GetValueFromVersionXML(version_xml,variable_name )
     return value
 
-def GetProjectPath(project_name=''):
+def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/01/InformationServer/Server/DSEngine'):
     """
     This needs recoding to work this out correctly.
     Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
@@ -878,10 +878,13 @@ def GetProjectPath(project_name=''):
     #project_base_path='/iis/01/InformationServer/Server/Projects/'
     #project_path=os.path.join(project_base_path, project_name )
 
-    dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
-    project_name='dstage1'
-    dsadm_user='dsadm'
-    command='source /iis/01/InformationServer/Server/DSEngine/dsenv; /iis/01/InformationServer/Server/DSEngine/bin/dsjob -projectinfo ' + project_name
+    #dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
+    #project_name='dstage1' - input param
+    #dsadm_user='dsadm'
+    
+    dsenv=os.path.join(dshome,'dsenv')
+    dsjobcommand=os.path.join(dshome,'bin/dsjob')
+    command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -projectinfo ' + project_name
     sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
     
     #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
@@ -890,7 +893,7 @@ def GetProjectPath(project_name=''):
 
 
     if result.returncode != 0:
-        return()
+        return None
     else:
         pattern=r'^Project Path\t: (.*)'
         projectpath = re.search(pattern,result.stdout)[1]
@@ -901,6 +904,13 @@ def GetProjectPath(project_name=''):
 
 def main(arrgv=None):
     ##  Main line
+
+    ## This script has been coded with 3.7.
+    import sys
+    if sys.version_info < (3,7):
+        sys.exit("\nThis script requires python 3.7 or higher.\n")
+
+
 
     ## The test ...  If I can't read this and understand what's going on ...then it needs re-writing
     ##   Any function should fit on 1 screen ( ish) ( ideally)
@@ -984,16 +994,28 @@ def main(arrgv=None):
     
     project_list=args.project_list
 
+    version_xml=os.path.join(args.install_base,'InformationServer/Version.xml')
+    dshome=os.path.join(args.install_base,'InformationServer/Server/DSEngine')
+    dsenvfile=os.path.join(dshome,'dsenv')
+    
+
 
 
     import os 
     for project in project_list:
+     
+        dsadm_user=GetDSAdminName(version_xml=version_xml)
+        
+        project_path=GetProjectPath(project_name=project,dsadm_user=dsadm_user, dshome=dshome)
+        if project_path is None:
+            logMessage.warning('Skipping ' + project + ' . Unable to find project path.')
+            continue
 
-        dsparams_path=os.path.join(GetProjectPath(project),'DSParams')
+
+        dsparams_path=os.path.join(project_path,'DSParams')
 
         if os.path.exists(dsparams_path):
             logMessage.info('Processing ' + dsparams_path)
-            
             CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
         else:
             logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
