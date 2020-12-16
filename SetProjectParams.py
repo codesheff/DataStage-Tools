@@ -192,8 +192,8 @@ class EnvVar():
         #Create output line in format 
         # Format is: <EnvVarName>\<Category>\<JobType>\<Type>[+]\<Default>\<SetAction>\<Scope>\<PromptText>\<HelpText>
         separator='\\'
-         
-        return separator.join( (self.EnvVarDefn.EnvVarName, self.EnvVarDefn.Category, self.EnvVarDefn.JobType, self.EnvVarDefn.Type, self.EnvVarDefn.Default, self.EnvVarDefn.SetAction, self.EnvVarDefn.Scope, self.EnvVarDefn.PromptText, self.EnvVarDefn.HelpText) ) 
+        definition=separator.join( (self.EnvVarDefn.EnvVarName, self.EnvVarDefn.Category, self.EnvVarDefn.JobType, self.EnvVarDefn.Type, self.EnvVarDefn.Default, self.EnvVarDefn.SetAction, self.EnvVarDefn.Scope, self.EnvVarDefn.PromptText, self.EnvVarDefn.HelpText) ) + '\n'
+        return definition
     
     def print_value(self):
         #Create output line in format 
@@ -287,7 +287,7 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
     # and load them int docitonary  -key env_var_name  --> EnvVarObject
     EnvVarDefns={}
     for line in EnvVarDefns_lines:
-        EnvVarName, Category, JobType, Type, Default, SetAction, Scope, PromptText, HelpText  = line.split('\\')[:9]
+        EnvVarName, Category, JobType, Type, Default, SetAction, Scope, PromptText, HelpText  = line.rstrip().split('\\')[:9]      # User rstrip to remove the trailing newline character
         EnvVarDefns[EnvVarName] = EnvVarDefn(EnvVarName, Category, JobType, Type, Default, SetAction, Scope, PromptText, HelpText)
 
     # Get the EnvVarValues from source DSParams file
@@ -708,7 +708,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                 if env_var_object.EnvVarDefn != None:
                     logMessage.debug('processing definition for  ' + env_var_name )
                     # Write the definition of the new variable out
-                    f_temp.write(env_var_object.print_definition())
+                    new_line=env_var_object.print_definition()
+                    f_temp.write(new_line)
                     ## Need to add in bit for adding these ( user defined ) variable definitions
                     ### Then need to add code for setting the values in the values section.
         
@@ -719,7 +720,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                 if env_var_object.EnvVarValue != None:
                     logMessage.debug('processing value  for  ' + env_var_name )
                     # Write the values of the new variable out
-                    f_temp.write(env_var_object.print_value())
+                    new_value=env_var_object.print_value()
+                    f_temp.write(new_value)
                   
             
 
@@ -866,6 +868,7 @@ def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
 def GetProjectPath(project_name=''):
     """
     This needs recoding to work this out correctly.
+    Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
     """
     import os
     project_base_path='/iis/01/InformationServer/Server/Projects/'
