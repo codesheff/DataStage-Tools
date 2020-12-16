@@ -725,7 +725,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                   
             
 
-
+    env_var_values_found=False ## This section does not always exist in the DSParams file. We need to create it if we don't find it.
     for line in f:
                 
         ## Work out what section we're in.
@@ -735,6 +735,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
             
             previousSection=currentSection # When Section changes, save off the previousSection name. 
             currentSection=result[1]
+            if currentSection == 'EnvVarValues':
+                env_var_values_found=True
 
             SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
 
@@ -790,6 +792,13 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     previousSection=currentSection # When Section changes, save off the previousSection name. 
     currentSection='End of file'
     SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+
+    ## If EnvVarValues didnt exist at start , we need to add it on.
+    if env_var_values_found == False:
+        section_change_line='[EnvVarValues]\n'
+        f_temp.write(section_change_line)
+        SectionChangeLogic(previousSection='EnvVarValues', amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+
 
     f_temp.close() # This will close ( and finish writing to ) the temp file
 
