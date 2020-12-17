@@ -18,6 +18,10 @@ This script will
   * compare the new DSParams file with the current active one for the project. If it has changed, it will back up the current one, and move the new one into place.
 
 """
+
+#  For info, you might want to stick something like this in your launch.json for debugging this script.
+#  "args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
+#
 import sys
 import argparse
 
