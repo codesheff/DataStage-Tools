@@ -23,7 +23,7 @@ This script will
 #  "args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
 #
 import sys
-import argparse
+
 
 
 import re
@@ -74,91 +74,6 @@ def GetProjectParamConfig(filePath=''):
     return data
 
     
-
-def GetLogger(logfile='/tmp/logfile.txt'):
-
-    
-    import logging
-
-    ##Maybe this should be a class really. Something I set up once at start of script, rather than reimporting every time we log a message.
-
-    # Set up logging 2x. One for logging to file, and one for logging to screen.
-    # You can control the logging level to each separately - and also at top level
-    
-    # log - general 
-    log = logging.getLogger('logger')
-    log.setLevel(logging.DEBUG)     #  this is initial filter. Messages have to be above this to get anywhere.
-
-    formatter_debug = logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s  ( from %(filename)s -> %(module)s) -> %(funcName)s ) ')
-    formatter_info =  logging.Formatter('%(asctime)s : %(levelname)s -  %(message)s ')
-    
-    # fh - logging filehandler, This is intened for debugging
-    ## Make sure dir exists 
-    logdir=os.path.dirname(logfile)
-
-    if ( not(os.path.exists(logdir))):
-        os.mkdir(logdir)
-        os.chmod(logdir,0o755)
-    else:
-        pass
-
-    fh = logging.FileHandler(logfile, mode='w', encoding='utf-8')
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter_debug)
-    log.addHandler(fh)
-
-    # ch - logging streamhandler. This is what will appear on your stdout
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO) ## Change to DEBUG while testing. Should just be INFO normally
-    #ch.setLevel(logging.DEBUG) ## Change to DEBUG while testing. Should just be INFO normally
-    ch.setFormatter(formatter_info)
-    log.addHandler(ch)
-
-    return log
-
-class LogMessage():
-    def __init__(self,logfile='/tmp/logfile.txt'):
-        
-        self.log=GetLogger(logfile)
-    
-    def __getFunctionNames(self):
-        import traceback
-        trace_b=traceback.extract_stack(limit=None)
-        
-        # Loop backwards through stack , to get function names
-        funcs=[]
-        for i in range( len(trace_b) - 1, -1, -1):
-            # If we hit '<module>', then stop. I assume this is as far as we need to go.
-            if trace_b[i][2] == '<module>':
-                break
-            funcs.append(trace_b[i][2])  
-
-        return(str(funcs))
-
-    def info(self, message):
-        """
-        This method is to log info
-        """
-        self.log.info(message)
-    
-    def debug(self, message):
-        """
-        This method is to log dubug information. 
-        It will include the list functions in current call stack.
-        """
-        self.log.debug(message + ' ---> ' + self.__getFunctionNames())
-    
-    def error(self, message):
-        """
-        This method is to log error
-        """
-        self.log.error(message )
-
-    def warning(self, message):
-        """
-        This method is to log warnings
-        """
-        self.log.warning(message )
 
 
 
@@ -347,7 +262,8 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
 
 def HandleInputParameters():
 
-
+    import os
+    import argparse
     # read this, and look at mutually exclusive arrgs  https://linuxconfig.org/how-to-use-argparse-to-parse-python-scripts-parameters
     
     this_script_path=(os.path.dirname(sys.argv[0]))
@@ -938,6 +854,7 @@ def main(arrgv=None):
     args = parser.parse_args()
 
     global logMessage # Make it available to all 
+    from general_functions import LogMessage
     logMessage=LogMessage(args.logfile)
 
     
