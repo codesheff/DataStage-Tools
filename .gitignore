@@ -1,3 +1,4 @@
 data/default_log_file.txt
 venv
 __pycache__
+logs

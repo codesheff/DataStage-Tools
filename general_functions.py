@@ -108,3 +108,120 @@ class LogMessage():
 
         return log
 
+
+
+class GetCredentials_old():
+    """
+    This will return args for user and password.
+    By default it will user --user and --password, and if not found will check for env variables USER and PASSWORD, and if not found prompt.
+    """
+
+    def __init__(self, user_argname='--user',user_envvar='USER',password_argname='--password',password_envvar='PASSWORD'):
+        self.user_argname=user_argname
+        self.user_envvar=user_envvar
+        self.password_argname=password_argname
+        self.password_envvar=password_envvar
+        
+        
+
+    def get_login_args(self):
+        import argparse
+        import getpass
+
+        def argparser_get_credentials(args):
+            args.user, args.password = login(args.user, args.password)
+
+
+        def login(user, password):
+            import os
+
+            if not user:
+                if self.user_envvar in os.environ:
+                    user = os.environ[self.user_envvar]
+                else:
+                    user = input("DataStage User:") 
+
+            if not password:
+                if self.password_envvar in os.environ:
+                    password = os.environ[self.password_envvar]
+                else:
+                    password = getpass.getpass()    
+
+            return user,password
+
+        parser = argparse.ArgumentParser(description="login")
+        parser.set_defaults(funct_getlogon=argparser_get_credentials)
+        
+        # Login
+        parser.add_argument(self.user_argname, dest='user', help=self.user_argname + ' .  If this argument is not passed it will be requested.')
+        parser.add_argument(self.password_argname, dest='password', help=self.password_argname + ' .  If this argument is not passed it will be requested.')
+
+        
+        args, unknown = parser.parse_known_args() # use 'unknown' to handle unrecognised args
+
+        args.funct_getlogon(args) #This line sets user dfaults
+
+      
+        return args
+
+
+class GetCredentials():
+    """
+    Returns a parser, with arrgs for user and password added
+    
+    By default it will user --user and --password, and if not found will check for env variables USER and PASSWORD, and if not found prompt.
+    You can specify different argnames and envvars to be used.
+    """
+
+    def __init__(self,  user_argname='--user',user_envvar='USER',password_argname='--password',password_envvar='PASSWORD'):
+        self.user_argname=user_argname
+        self.user_envvar=user_envvar
+        self.password_argname=password_argname
+        self.password_envvar=password_envvar
+        
+        
+
+    def add_login_args(self, parser=None):
+        """
+        Add the login args to a parser. Returns a parser.
+
+        """
+        import argparse
+        import getpass
+
+        def argparser_get_credentials(args):
+            args.user, args.password = login(args.user, args.password)
+
+
+        def login(user, password):
+            import os
+
+            if not user:
+                if self.user_envvar in os.environ:
+                    user = os.environ[self.user_envvar]
+                else:
+                    user = input("DataStage User:") 
+
+            if not password:
+                if self.password_envvar in os.environ:
+                    password = os.environ[self.password_envvar]
+                else:
+                    password = getpass.getpass()    
+
+            return user,password
+
+        if parser is None:
+            # if no parser passed in, set up a new one
+            parser = argparse.ArgumentParser(description="login")
+        
+        parser.set_defaults(funct_getlogon=argparser_get_credentials)
+        
+        # Login
+        parser.add_argument(self.user_argname, dest='user', help=self.user_argname + ' .  If this argument is not passed it will be requested.')
+        parser.add_argument(self.password_argname, dest='password', help=self.password_argname + ' .  If this argument is not passed it will be requested.')
+
+      
+        return parser
+
+        
+      
