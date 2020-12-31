@@ -906,7 +906,7 @@ def main(arrgv=None):
         adminGroup=GetDSAdminGroup()
         
         uid=pwd.getpwnam(adminName).pw_uid  
-        #gid=grp.getgrnam(adminGroup).gr_gid
+        gid=grp.getgrnam(adminGroup).gr_gid
     except KeyError:
         logMessage.error('Unable to find uid or gid for ' + adminName )
         sys.exit("\nUser not found.\n")
