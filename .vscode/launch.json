@@ -19,7 +19,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--hostName", "HN01", "--projectName" ,"dstage1", "--jobName", "Job_1", "--jobName", "Job_2", "--ds-user", "isadmin"]
+            "args": ["--hostName", "HN01", "--projectName" ,"dstage1", "--jobName", "Job_1", "--jobName", "Job_2", "--ds-user", "isadmin", "--isPort", "9443"]
 
         }
     ]

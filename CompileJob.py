@@ -21,6 +21,8 @@ def HandleInputParameters():
     # Set up input options
     
     parser = argparse.ArgumentParser()
+    parser.add_argument("--serviceTierHostName", type=str, dest="serviceTierHostName", help="The hostName/dns/ipaddress of the DataStage Service layer. e.g 127.0.0.1:9443 ", default='127.0.0.1', required=False) # Setting all to false here as it's making testing easier
+    parser.add_argument("--isPort", type=str, dest="isPort", help="The port for accesing the serviceTier e.g 9443 ", default='9443', required=False) # Setting all to false here as it's making testing easier
     parser.add_argument("--hostName", type=str, dest="hostName", help="The hostName of the DataStage engine. e.g HN01 ", default='HN01', required=True) # Setting all to false here as it's making testing easier
     parser.add_argument("--projectName", type=str, dest="projectName", help="project to compile jobs in ", required=True)
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
@@ -70,7 +72,8 @@ def main():
 
 
     #url='https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi?api=compileDSJob&jobName=Job_2&projectName=dstage1&hostName=HN01&getFullOutput=false&apiVersion=3.0'
-    url='https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi'
+    #url='https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi'
+    url='https://' + args.serviceTierHostName + ':' + args.isPort + '/ibm/iis/api/dscdesignerapi'
     p = {"api": "compileDSJob", "jobName": "Job_1", "projectName" : args.projectName , "hostName" : args.hostName , "getFullOutput" : "False", "apiVersion" : "3.0"}
 
     user=args.user
@@ -116,6 +119,11 @@ def main():
                 warnings.filterwarnings('default')
                 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
                 response = s.get(url, params=p, auth = HTTPBasicAuth(user,password),verify=False )  #Need to look into sorting out the ssl here.
+            
+            except Exception as e:
+                logMessage.error('Exception occured. Exception is :' + str(e) + '. Check if url ( hostname and port) is correct.')
+                
+                break 
                 
 
             if response.status_code == 401:
