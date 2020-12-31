@@ -32,7 +32,7 @@ import os
 
 
 
-def GetProjectParamConfig(filePath=''):
+def GetProjectParamConfig(filePath='',configType='EnvVarDefns'):
     """
     Reads a json file, and returns the json object ( list of dictionaries).
 
@@ -71,7 +71,17 @@ def GetProjectParamConfig(filePath=''):
     with open(filePath) as json_file:
         data = json.load(json_file)
 
-    return data
+    config=[]
+    for item in data:
+        if configType in item:
+            config = item[configType]
+            break
+
+    if config == []:
+        logMessage.info(configType + ' not found in ' + filePath + ' .')
+      
+
+    return config
 
     
 
@@ -334,7 +344,7 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
         else:
             # backup the original file
             t = time.localtime()
-            backupfile=orig_file + time.strftime('%Y%M%d_%H%M%S', t)
+            backupfile=orig_file + time.strftime('%Y%m%d_%H%M%S', t)
             shutil.copyfile(orig_file,backupfile)
         
     else:
@@ -843,13 +853,12 @@ def main(arrgv=None):
 
     ## The test ...  If I can't read this and understand what's going on ...then it needs re-writing
     ##   Any function should fit on 1 screen ( ish) ( ideally)
-    ##   Each function should be easily describable so we know what it does
+    ##   Each function should be easily described so we know what it does
 
     import os
-    import pwd
-    import grp 
+   
 
-
+    # Get input paramaters
     parser=HandleInputParameters()
     args = parser.parse_args()
 
@@ -884,13 +893,14 @@ def main(arrgv=None):
     logMessage.info('install_base is :' + args.install_base )
     logMessage.info('template_dsparam is :' + args.template_dsparam) 
     logMessage.info('project_list is :' + str(args.project_list) )
-
-
+    logMessage.info('standard params file is : ' + args.standard_params_file)
+    logMessage.info('project specific params file is : ' + args.project_specific_params_file)
 
 
     # Check you will have permissions to change the files as required
- 
 
+    import pwd
+    import grp 
     try: 
         adminName=GetDSAdminName()
         adminGroup=GetDSAdminGroup()
@@ -906,26 +916,20 @@ def main(arrgv=None):
     if not os.geteuid() == 0 and not os.getuid() == uid:
         sys.exit("\nOnly root or the datastage admin can run this script\n")
 
-    # Get the standard parameters
+    # Get the standard parameters from the config file 
     standard_params=GetProjectParamConfig(args.standard_params_file)
 
 
-    # Get the project specific parameters
+    # Get the project specific parameters from the config file
     project_specific_params=GetProjectParamConfig(args.project_specific_params_file)
 
 
 
-    ## Need to combine those ( project specific overrides standard)
-
-
-
-    # Build up new DSParams file from template, plus the standard and project specific Param config, and if compare/fix the DSParams of the target project
-
-    
+    # Build up new DSParams file from template, plus the standard and project specific Param config, and if compare/fix the DSParams of the target project   
     project_list=args.project_list
 
-    version_xml=os.path.join(args.install_base,'InformationServer/Version.xml')
-    dshome=os.path.join(args.install_base,'InformationServer/Server/DSEngine')
+    version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
+    dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
     dsenvfile=os.path.join(dshome,'dsenv')
     
 
