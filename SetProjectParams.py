@@ -253,12 +253,31 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
             EnvVars[env_var_name]= EnvVar(env_var_name,None,EnvVarValue )
 
 
+    ## Get dictionary of PROJECT Values from source DSParams file
+    sectionStartPattern=r'^\[PROJECT\] *'
+    sectionEndPattern=r'^\[.*\] *'    ## or end of file
+    #pattern_toMatch=r'^(\w*)\\User Defined\\.*$'
+    Project_lines=GetLinesFromDSParam(filePath,sectionStartPattern, sectionEndPattern )
+
+    ProjectValues={}
+    for line in Project_lines:
+        #envVarNameQuoted, not_required, envVarValue = line.split('\\')[0]
+        ## PXDeployJobDirectoryTemplate=value
+        envProjectVarNameQuoted = line.split('=')[0]
+        envProjectVarValue = line.split('=')[1]
+        envProjectVarName = envProjectVarNameQuoted.replace('"','')
+        ProjectValues[envProjectVarName] = envProjectVarValue  #Could setup a class for this again, but I've just done as string for now as its just a simple Name=value
+
+    AutoPurgeValues={}
+
+
+
         
 
 
 
 
-    return EnvVars
+    return EnvVars, ProjectValues, AutoPurgeValues
 
 
 
@@ -360,16 +379,147 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
 
 
 
-def GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath='' , params_to_update=[]):
+def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  templateDSParamsPath='' , params_to_update=[]):
     """
     Update EnvVar object with definitions of variables that are in the 'params_to_update'
 
     Start from template DSParams...then apply stuff from origEnvVar (ie. the dictionary you've already done some updates to ) then apply stuff from params_to_update ( e.g standard or project specific config)
     """
+    #global logMessage
+    #try:
+    #    logMessage.debug('Starting function GetAmendedEnvVars')
+    #except:
+    #    from general_functions import LogMessage
+    #    logMessage=LogMessage(args.logfile)
 
     # Get Full set of Env Var definitions from the DSParam file, and store as a EnvVar object
-    myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
-    myOutputEnvVar_ToApply = origEnvVar
+    #EnvVars, ProjectValues, AutoPurgeValues
+    myTemplateEnvVar, myTemplateProjectValues, myTemplateAutoPurgeValues =GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
+    #myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
+    def GetEnvVarToApply(origEnvVar={},params_to_update=[],myTemplateEnvVar=myTemplateEnvVar):
+
+        """
+        This function takes the original environment variable . I need to add MyTemplateEnvVAr plus some more I reckon 
+        """
+        myOutputEnvVar_ToApply = origEnvVar
+
+
+        ## Get values from project specific params, and apply them to the EnvVar object. params_to_update is a list of dictionaries, each dictionary defines a variable
+        ##    
+        for variable_definition in params_to_update:
+
+            ## ignore entries that do not contain 'EnvVarName' ( ie. skip past comments or any other invalid entries)
+            if 'EnvVarName'not in variable_definition:
+                continue
+
+            ## Look for the variable in the EnvVar object
+            envvar_name=variable_definition['EnvVarName']
+            if envvar_name in myTemplateEnvVar:
+                logMessage.info(envvar_name + ' exists in myTemplateEnvVar')
+                # Copy it to my output env var - nb. This is just creating new obj referencing the original..so updates will be seen in both! ( This should not matter though, in current process)
+                myOutputEnvVar_ToApply[envvar_name]=myTemplateEnvVar[envvar_name]
+
+                ## Check if it is user defined. ( for non-user defined, then we do not change the definition, only the value)
+                
+                if myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.Category == 'User Defined':
+                    ## For user defined, update each variable based on what's in the params_to_update
+
+                    ## Update existing User Defined Variable based on contents of variable_definition
+                    if 'Type' in variable_definition:
+                        myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.Type = variable_definition['Type']
+                    
+                    if 'PromptText' in variable_definition:
+                        myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.PromptText = variable_definition['PromptText']
+
+                    if 'Default' in variable_definition:
+                        pass 
+                        # For 'Default' we actually set the value in the 
+                    
+                    if 'Default' in variable_definition:
+                        myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
+                    else:
+                        # If variable is defined with no Default here, this should cause the variable to be unset.(i.e this overrides any previous default that existed in the template DSParam)
+                        myEnvVarValue = None
+                    
+                    myOutputEnvVar_ToApply[envvar_name].EnvVarValue = myEnvVarValue
+                    
+                else: 
+                    
+                    myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
+                    myOutputEnvVar_ToApply[envvar_name].EnvVarValue=myEnvVarValue
+                    
+                    
+
+            else:
+                ## This variable does not already exist, so will be created as user defined
+                ## e.g. MyUnsetVariable\User Defined\-1\String\\0\Project\This is my unset variable - it has no value set.\
+                logMessage.debug(envvar_name + ' does not exist in myEnvVar')
+
+                ## Create new User Defined Variable based on contents of variable_definition
+
+                if 'Default' in variable_definition:
+                    myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
+                else:
+                    # No need to store value object
+                    myEnvVarValue = None
+                    
+                # EnvVarName
+                # Type - defaults to String
+                # Default - will actualy be used to set the Value ( Default in definition will stay as empty)
+                # PromptText
+                if 'Type' in variable_definition:
+                    varType=variable_definition['Type']
+                else:
+                    varType='String'
+                    
+                
+                if 'PromptText' in variable_definition:
+                    varPromptText=variable_definition['PromptText']
+                else:
+                    varPromptText=variable_definition['EnvVarName']
+                    
+
+                myEnvVarDefn=EnvVarDefn(EnvVarName=envvar_name,
+                                            Category='User Defined' , 
+                                            JobType='-1' , 
+                                            Type=varType, 
+                                            Default='', 
+                                            SetAction='0', 
+                                            Scope='Project', 
+                                            PromptText=varPromptText, HelpText='hello')
+
+                # Now update  myEnvVar with the value and definition                    
+                myOutputEnvVar_ToApply[envvar_name]=EnvVar(EnvVarName=envvar_name, EnvVarDefn= myEnvVarDefn, EnvVarValue=myEnvVarValue)
+        return myOutputEnvVar_ToApply
+
+    myOutputEnvVar_ToApply=GetEnvVarToApply(origEnvVar=origEnvVar,params_to_update=params_to_update)
+
+            ## Need to add some code here to do other sections
+    myOutputProjectSetting_ToApply=[]
+    myOutputAutoPurge_ToApply=[]
+                    
+    return myOutputEnvVar_ToApply,myOutputProjectSetting_ToApply,myOutputAutoPurge_ToApply
+
+
+
+def GetAmendedSettings(origSettings={}, templateDSParamsPath='' , settings_to_update=[], sectionName='PROJECT'):
+    """
+
+    ## TEMP VERSION.. maybe not needed 
+    Update EnvVar object with definitions of variables that are in the 'params_to_update'
+
+    Start from template DSParams...then apply stuff from origEnvVar (ie. the dictionary you've already done some updates to ) then apply stuff from params_to_update ( e.g standard or project specific config)
+    """
+    #global logMessage
+    #try:
+    #    logMessage.debug('Starting function GetAmendedEnvVars')
+    #except:
+    #    from general_functions import LogMessage
+    #    logMessage=LogMessage(args.logfile)
+
+    # Get Full set of Env Var definitions from the DSParam file, and store as a EnvVar object
+    myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName=sectionName, pattern_toMatch=r'^.*$') 
+    myOutputEnvVar_ToApply = origSettings
 
 
     ## Get values from project specific params, and apply them to the EnvVar object. params_to_update is a list of dictionaries, each dictionary defines a variable
@@ -458,114 +608,29 @@ def GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath='' , params_to_update=
 
             # Now update  myEnvVar with the value and definition                    
             myOutputEnvVar_ToApply[envvar_name]=EnvVar(EnvVarName=envvar_name, EnvVarDefn= myEnvVarDefn, EnvVarValue=myEnvVarValue)
-
-
-
-    
+   
 
     return myOutputEnvVar_ToApply
 
 
-
-
-    
-
-def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], project_specific_params=[]):
-    """
-    This function will take in a path to a template DSParams file, and a list of dictionaries for the project specific parameter settings.
-    TemplateDSParamsPath could be pointing to the Templates folder, or some other DSParams file  ( e.g if we're building one in multiple stages ..starting from template..apply standard...create new temp.. use new temp as template, apply project specific changes)
-
-    It combines them to produce a new file ( or should it be a new object in the program???. Lets decide in a bit )    
-
-    If it creates output file.. then should the path to that be a param too?
-    """
-
-    #UserDefinedEnvVarDefns={}
-    #EnvVarValues={}
-    #UserDefinedEnvVarDefns, EnvVarValues = GetDSParamValues(templateDSParamsPath)
-    
-    ## Get dictionary of all variables to amend.
-    amendedEnvVars=GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
-    amendedEnvVars=GetAmendedEnvVars(origEnvVar=amendedEnvVars, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params)
-
-
-    
-        ## I think that whole section above my not be needed actually
-        ##  Could just to this:
-           
-        ##  Create myEnvVar - Needs to contain all User Defined, and any Values that are set  
-        ##  Create new output 'temp' file
-        ##  Read template file
-        ##  For each line.
-        ##      if its not in relevent section ( EnvVarValues or EnvVarDefn)m the write it out unchanged to new temp file
-        ##      for EnvVarDefn section
-        ##         Compared line it with what's in myEnvVar,
-        ##         If found in myEnvVar
-        ##            If matches, write it out as is - only valid for User Definited though
-        ##            If does not match, write out the new version
-
-
-
-    try:
-        f = open(templateDSParamsPath)
-    except OSError:
-        logMessage.error('Unable to open the template DSParam file :' + templateDSParamsPath )
-        return None
-    
-    ## This creates a temp file that will be removed once it is closed.
-    ## Then use normal open to open the same file so that we can write to it as normal
-    import tempfile
-    fp = tempfile.NamedTemporaryFile()
-
-    try:
-        f_temp = open(fp.name,'w')
-    except OSError:
-        logMessage.error('Unable to open the temp file :' + f_temp )
-        return None
- 
-    ##  Read each line from template file
-    currentSection=None
-    ## Build up the pattern for matching the EnvVarDefn format
-    pattern_separator=r'\\'
-    pattern_EnvVarName=r'(\w*)'
-    pattern_Category=r'(\w*[/\w ]*)'
-    pattern_JobType=r'([-]*\d)'
-    pattern_Type=r'(\w*[/\w+]*)'
-    pattern_Default=r'(.*?)'
-    pattern_SetAction=r'(\d)'
-    pattern_Scope=r'(\w*)'
-    pattern_PromptText=r'(.*?)'
-    pattern_HelpText=r'(.*)$'
-
-    
-    EnvVarDefnFormat=r'^' 
-    EnvVarDefnFormat+=pattern_EnvVarName
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_Category
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_JobType
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_Type
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_Default
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_SetAction
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_Scope
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_PromptText
-    EnvVarDefnFormat+=pattern_separator
-    EnvVarDefnFormat+=pattern_HelpText
-
-    ## Build up the pattern for matching the EnvVarValue format
-    ## "MySetVariable"\1\"Hello"
-    EnvVarValueFormat=r'^"(\w*)"\\(1)\\"(.*)"' 
-    
-    def OutputDebugInfoForUnmatchedLineFormat():
+def CheckFixDSParams_OutputDebugInfoForUnmatchedLineFormat(line):
         """
         This is just to help understand what patterns are being matched when line does not match format we expect.
         Should not really be needed.
         """
+
+        ## This bits for EnvVarDefn
+        pattern_separator=r'\\'
+        pattern_EnvVarName=r'(\w*)'
+        pattern_Category=r'(\w*[/\w ]*)'
+        pattern_JobType=r'([-]*\d)'
+        pattern_Type=r'(\w*[/\w+]*)'
+        pattern_Default=r'(.*?)'
+        pattern_SetAction=r'(\d)'
+        pattern_Scope=r'(\w*)'
+        pattern_PromptText=r'(.*?)'
+        pattern_HelpText=r'(.*)$'
+
         EnvVarDefnFormat=r'^' + pattern_EnvVarName
         result = re.search(EnvVarDefnFormat, line)
         logMessage.debug('EnvVarName :  ' + result[1])
@@ -619,10 +684,70 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
         logMessage.debug('HelpText :  ' + result[9])
 
 
+def CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns'):
+    """
+    Called from   CheckFixDSParams -  to return a pattern for the section
+    """
+
+    if section == 'EnvVarDefns':
+        ## Build up the pattern for matching the EnvVarDefn format
+        ## This bits for EnvVarDefn
+        pattern_separator=r'\\'
+        pattern_EnvVarName=r'(\w*)'
+        pattern_Category=r'(\w*[/\w ]*)'
+        pattern_JobType=r'([-]*\d)'
+        pattern_Type=r'(\w*[/\w+]*)'
+        pattern_Default=r'(.*?)'
+        pattern_SetAction=r'(\d)'
+        pattern_Scope=r'(\w*)'
+        pattern_PromptText=r'(.*?)'
+        pattern_HelpText=r'(.*)$'
+
+        
+        EnvVarDefnFormat=r'^' 
+        EnvVarDefnFormat+=pattern_EnvVarName
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_Category
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_JobType
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_Type
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_Default
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_SetAction
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_Scope
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_PromptText
+        EnvVarDefnFormat+=pattern_separator
+        EnvVarDefnFormat+=pattern_HelpText
+        return EnvVarDefnFormat
+    elif section == 'EnvVarValue':
+        ## Build up the pattern for matching the EnvVarValue format
+        EnvVarValueFormat=r'^"(\w*)"\\(1)\\"(.*)"' 
+        return EnvVarValueFormat
+
+
+    
+
+def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings=[], standard_autopurge_settings=[], project_specific_params=[] ,project_specific_project_settings=[], project_specific_autopurge_settings=[]):
+
+    #dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings 
+    """
+    This function will take in a path to a template DSParams file, and a list of dictionaries for the project specific parameter settings.
+    TemplateDSParamsPath could be pointing to the Templates folder, or some other DSParams file  ( e.g if we're building one in multiple stages ..starting from template..apply standard...create new temp.. use new temp as template, apply project specific changes)
+
+    It combines them to produce a new file ( or should it be a new object in the program???. Lets decide in a bit )    
+
+    If it creates output file.. then should the path to that be a param too?
+    """
+
+
     def SectionChangeLogic(previousSection='', amendedEnvVars={}, f_temp=''):
         """
         This logic need to be called in the loop, and when the loop finishes.
-        Need to check...is f_temp here referencing the same object as f_temp outside this functino?  ( That's what I want)
+        Need to check...is f_temp here referencing the same object as f_temp outside this function?  ( That's what I want)
 
         """
         # If section change, and previous section was EnvVarDefns, need to make sure any EnvVarDefns which have not been processed from amendedEnvVars are written out.
@@ -652,10 +777,56 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                     # Write the values of the new variable out
                     new_value=env_var_object.print_value()
                     f_temp.write(new_value)
-                  
-            
 
+
+    #Main code for this function (CheckFixDSParams) 
+    
+    ## Get dictionary of all variables to amend. Start with empty, the apply the standard changes, then apply the project specific changes
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={}, origProjectSettings={}, origAutoPurge={},  templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar=amendedEnvVars,origProjectSettings=amendedProjectSettings,origAutoPurge=amendedAutoPurge, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params)
+
+
+    
+      
+        ##  Create myEnvVar - Needs to contain all User Defined, and any Values that are set  
+        ##  Create new output 'temp' file
+        ##  Read template file
+        ##  For each line.
+        ##      if its not in relevent section ( EnvVarValues or EnvVarDefn)m the write it out unchanged to new temp file
+        ##      for EnvVarDefn section
+        ##         Compared line it with what's in myEnvVar,
+        ##         If found in myEnvVar
+        ##            If matches, write it out as is - only valid for User Definited though
+        ##            If does not match, write out the new version
+
+
+    # Open the template DSParams file
+    try:
+        f = open(templateDSParamsPath)
+    except OSError:
+        logMessage.error('Unable to open the template DSParam file :' + templateDSParamsPath )
+        return None
+    
+    ## This creates a temp file that will be removed once it is closed.
+    ## Then use normal open to open the same file so that we can write to it as normal
+    import tempfile
+    fp = tempfile.NamedTemporaryFile()
+
+    try:
+        f_temp = open(fp.name,'w')
+    except OSError:
+        logMessage.error('Unable to open the temp file :' + f_temp )
+        return None
+ 
+    ##  Read each line from template file, and do processing depending on what section of the file we're in.
+    currentSection=None
     env_var_values_found=False ## This section does not always exist in the DSParams file. We need to create it if we don't find it.
+    auto_purge_found=False
+
+    ## Define the record formats we will use
+    EnvVarValueFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarValue')                            
+    EnvVarDefnFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns')              
+
     for line in f:
                 
         ## Work out what section we're in.
@@ -666,30 +837,30 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
             previousSection=currentSection # When Section changes, save off the previousSection name. 
             currentSection=result[1]
             if currentSection == 'EnvVarValues':
-                env_var_values_found=True
+                env_var_values_found = True
+            if currentSection == 'AUTO-PURGE':
+                auto_purge_found = True
 
             SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
 
         else:
             if currentSection == 'EnvVarValues':
                 ## Check it matches the format we expect ( otherwise just allow line to be written out unchanged).
-                           
+                #EnvVarValueFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarValue')                            
                 result = re.search(EnvVarValueFormat, line)
-
                 if result != None:
                     envvar_name=result[1]
                     # Check if the variable is included in our variables that are to be amended.
                     if envvar_name in amendedEnvVars:
                         line=amendedEnvVars[envvar_name].print_value()
                         amendedEnvVars[envvar_name].EnvVarValue = None
-
-
-                
+              
 
 
             if currentSection == 'EnvVarDefns':
 
-                # Check it matches our expected format              
+                # Check it matches our expected format
+                #EnvVarDefnFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns')              
                 result = re.search(EnvVarDefnFormat, line)
                 if result != None:
                     logMessage.debug('Processing ' + result[1])
@@ -709,7 +880,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                 else:
                     logMessage.info('Line does not match expected format for a variable' + line)
                     # Would be nice to move this debug code to some other function, to keep this code a bit shorter. 
-                    OutputDebugInfoForUnmatchedLineFormat()
+                    CheckFixDSParams_OutputDebugInfoForUnmatchedLineFormat(line)
                     
 
         f_temp.write(line)
@@ -860,10 +1031,12 @@ def main(arrgv=None):
 
     # Get input paramaters
     parser=HandleInputParameters()
+    #global args 
     args = parser.parse_args()
 
-    global logMessage # Make it available to all 
+    ##global logMessage # Make it available to all 
     from general_functions import LogMessage
+    global logMessage
     logMessage=LogMessage(args.logfile)
 
     
@@ -917,11 +1090,15 @@ def main(arrgv=None):
         sys.exit("\nOnly root or the datastage admin can run this script\n")
 
     # Get the standard parameters from the config file 
-    standard_params=GetProjectParamConfig(args.standard_params_file)
+    standard_params=GetProjectParamConfig(args.standard_params_file,'EnvVarDefns')
+    standard_project_settings=GetProjectParamConfig(args.standard_params_file,'PROJECT')
+    standard_autopurge_settings=GetProjectParamConfig(args.standard_params_file,'AUTO-PURGE')
 
 
     # Get the project specific parameters from the config file
-    project_specific_params=GetProjectParamConfig(args.project_specific_params_file)
+    project_specific_params=GetProjectParamConfig(args.project_specific_params_file,'EnvVarDefns')
+    project_specific_project_settings=GetProjectParamConfig(args.project_specific_params_file,'PROJECT')
+    project_specific_autopurge_settings=GetProjectParamConfig(args.project_specific_params_file,'AUTO-PURGE')
 
 
 
@@ -933,12 +1110,14 @@ def main(arrgv=None):
     dsenvfile=os.path.join(dshome,'dsenv')
     
 
-
-
+    
+    
     import os 
+    dsadm_user=GetDSAdminName(version_xml=version_xml)
+    
     for project in project_list:
      
-        dsadm_user=GetDSAdminName(version_xml=version_xml)
+        
         
         project_path=GetProjectPath(project_name=project,dsadm_user=dsadm_user, dshome=dshome)
         if project_path is None:
@@ -950,7 +1129,8 @@ def main(arrgv=None):
 
         if os.path.exists(dsparams_path):
             logMessage.info('Processing ' + dsparams_path)
-            CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, project_specific_params=project_specific_params  )
+            ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
+            CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
         else:
             logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
 
@@ -959,4 +1139,8 @@ def main(arrgv=None):
 
 if __name__=="__main__":
     import sys
+    # Define global variables
+    args=''
+    logMessage=''
+    logMessage=''
     main()
