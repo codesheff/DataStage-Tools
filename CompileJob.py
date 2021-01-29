@@ -13,7 +13,7 @@ def HandleInputParameters():
     this_script_path=(os.path.dirname(sys.argv[0]))
     
     this_script_name=(os.path.basename(sys.argv[0]))
-    datadir=os.path.join(this_script_path,"data") # Ah!  you don't want the '/' in your args - makes sense!  
+    # not used datadir=os.path.join(this_script_path,"data") # Ah!  you don't want the '/' in your args - makes sense!  
     logdir=os.path.join(this_script_path,"logs") # Ah!  you don't want the '/' in your args - makes sense!  
     default_logfile=os.path.join(logdir,this_script_name + '_log_file.txt')
    
@@ -23,7 +23,7 @@ def HandleInputParameters():
     parser = argparse.ArgumentParser()
     parser.add_argument("--serviceTierHostName", type=str, dest="serviceTierHostName", help="The hostName/dns/ipaddress of the DataStage Service layer. e.g 127.0.0.1:9443 ", default='127.0.0.1', required=False) # Setting all to false here as it's making testing easier
     parser.add_argument("--isPort", type=str, dest="isPort", help="The port for accesing the serviceTier e.g 9443 ", default='9443', required=False) # Setting all to false here as it's making testing easier
-    parser.add_argument("--hostName", type=str, dest="hostName", help="The hostName of the DataStage engine. e.g HN01 ", default='HN01', required=True) # Setting all to false here as it's making testing easier
+    parser.add_argument("--hostName", type=str, dest="hostName", help="The hostName of the DataStage engine. e.g HN01. Often the same as the serviceTierHostName ", default='HN01', required=True) # Setting all to false here as it's making testing easier
     parser.add_argument("--projectName", type=str, dest="projectName", help="project to compile jobs in ", required=True)
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
     parser.add_argument("--jobName", action='append', type=str, dest="job_list", help="jobs to compile", required=True)
