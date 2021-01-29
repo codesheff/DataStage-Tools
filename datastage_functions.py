@@ -3,7 +3,7 @@
 #print('Hello')
 
 
-def GetValueFromVersionXML(VersionXMLPath='/iis/01//InformationServer/Version.xml' ,VariableName='datastage.user.name'):
+def GetValueFromVersionXML(VersionXMLPath='/iis/test//InformationServer/Version.xml' ,VariableName='datastage.user.name'):
     """
     return value for 'VariableName' in Version.xml file
     """
@@ -15,14 +15,14 @@ def GetValueFromVersionXML(VersionXMLPath='/iis/01//InformationServer/Version.xm
     try: 
         versionXMLValue[VariableName]
     except (NameError, KeyError):
-        versionXMLValue=GetValuesFromVersionXML()
+        versionXMLValue=GetValuesFromVersionXML(VersionXMLPath=VersionXMLPath)
 
 
     return versionXMLValue[VariableName]
 
 
 
-def GetValuesFromVersionXML(VersionXMLPath='/iis/01//InformationServer/Version.xml'):
+def GetValuesFromVersionXML(VersionXMLPath='/iis/test/InformationServer/Version.xml'):
     """
     return dictionary of values  from Version.xml file
     """

@@ -12,6 +12,8 @@ STILL TO DO:
   See if any repeated logic that should be turned into functions instead
   Move some functions to the general modules  and some to the datastage modules
 
+  Need to check best way to set oshvisable TRUE  ( can be done via dsadmin command )
+
 This script will 
   * take in path to a param file?( format?), which contains project parameter definitions.
   * take the standard DSParams from Template, 
@@ -316,7 +318,7 @@ def HandleInputParameters():
     # Set up input options
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/01 .", default='/iis/01', required=True) # Setting all to false here as it's making testing easier
+    parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/test .", default='/iis/test', required=True) # Setting all to false here as it's making testing easier
     parser.add_argument("--project-name", action='append', type=str, dest="project_list", help="project to check, and apply changes to ", required=True)
 
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
@@ -672,7 +674,7 @@ def CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns'):
 
     
 
-def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings={}, standard_autopurge_settings={}, project_specific_params=[] ,project_specific_project_settings={}, project_specific_autopurge_settings={}):
+def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings={}, standard_autopurge_settings={}, project_specific_params=[] ,project_specific_project_settings={}, project_specific_autopurge_settings={}):
 
     #dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings 
     """
@@ -902,9 +904,13 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     import pwd
     import grp 
 
+    #version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
+    #dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
+
+
     try: 
-        adminName=GetDSAdminName()
-        adminGroup=GetDSAdminGroup()
+        adminName=GetDSAdminName(version_xml)
+        adminGroup=GetDSAdminGroup(version_xml)
         
         uid=pwd.getpwnam(adminName).pw_uid  
         gid=grp.getgrnam(adminGroup).gr_gid
@@ -940,7 +946,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
 
 
 
-def GetDSAdminName(version_xml='/iis/01/InformationServer/Version.xml'):
+def GetDSAdminName(version_xml='/iis/test/InformationServer/Version.xml'):
     """
     This should be the standard way of getting the DataStage admin user name
     """
@@ -958,7 +964,7 @@ def GetDSAdminName(version_xml='/iis/01/InformationServer/Version.xml'):
     return value
     #return 'stedo'
 
-def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
+def GetDSAdminGroup(version_xml='/iis/test/InformationServer/Version.xml'):
     """
     This should be the standard way of getting the DataStage admin users group
     """
@@ -970,7 +976,7 @@ def GetDSAdminGroup(version_xml='/iis/01/InformationServer/Version.xml'):
     value=GetValueFromVersionXML(version_xml,variable_name )
     return value
 
-def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/01/InformationServer/Server/DSEngine'):
+def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/InformationServer/Server/DSEngine'):
     """
     This needs recoding to work this out correctly.
     Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
@@ -1069,8 +1075,13 @@ def main(arrgv=None):
 
     import pwd
     import grp 
+    
+    version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
+    dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
+
+
     try: 
-        adminName=GetDSAdminName()
+        adminName=GetDSAdminName(version_xml)
         # not used anywhere yet adminGroup=GetDSAdminGroup()
         
         uid=pwd.getpwnam(adminName).pw_uid  
@@ -1100,8 +1111,7 @@ def main(arrgv=None):
     # Build up new DSParams file from template, plus the standard and project specific Param config, and if compare/fix the DSParams of the target project   
     project_list=args.project_list
 
-    version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
-    dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
+
     # not used anywhere yet  dsenvfile=os.path.join(dshome,'dsenv')
     
 
@@ -1125,7 +1135,7 @@ def main(arrgv=None):
         if os.path.exists(dsparams_path):
             logMessage.info('Processing ' + dsparams_path)
             ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
-            CheckFixDSParams(dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
+            CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
         else:
             logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
 
