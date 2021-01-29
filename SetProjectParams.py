@@ -71,13 +71,15 @@ def GetProjectParamConfig(filePath='',configType='EnvVarDefns'):
     with open(filePath) as json_file:
         data = json.load(json_file)
 
-    config=[]
+
+    ## config is {} for PROJECT and AUTO-PURGE, but it might be list for ENVVars
+    config={}
     for item in data:
         if configType in item:
             config = item[configType]
             break
 
-    if config == []:
+    if config == {}:
         logMessage.info(configType + ' not found in ' + filePath + ' .')
       
 
@@ -379,11 +381,18 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
 
 
 
-def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  templateDSParamsPath='' , params_to_update=[]):
+def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  templateDSParamsPath='' , params_to_update=[],project_settings_to_update={}, autopurge_settings_to_update={}):
     """
     Update EnvVar object with definitions of variables that are in the 'params_to_update'
 
     Start from template DSParams...then apply stuff from origEnvVar (ie. the dictionary you've already done some updates to ) then apply stuff from params_to_update ( e.g standard or project specific config)
+
+
+     params_to_update - a list of dictionaries
+     project_settings_to_update - dictionary
+     project_settings_to_update - dictionary
+     autopurge_settings_to_update
+
     """
     #global logMessage
     #try:
@@ -397,9 +406,16 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
     myTemplateEnvVar, myTemplateProjectValues, myTemplateAutoPurgeValues =GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
     #myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
     def GetEnvVarToApply(origEnvVar={},params_to_update=[],myTemplateEnvVar=myTemplateEnvVar):
+        
 
         """
-        This function takes the original environment variable . I need to add MyTemplateEnvVAr plus some more I reckon 
+        This function takes the original environment variable . 
+        For each variable in the project_settings_to_update
+           Check to see if exists in the template file, and get the full definition from there if required ( Need to do this since config file may not contain full definition)
+           Create the updated full definition
+        returns the dictionary of full definitions of the EnvVars ( definitions and values)
+
+
         """
         myOutputEnvVar_ToApply = origEnvVar
 
@@ -491,18 +507,42 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
                 # Now update  myEnvVar with the value and definition                    
                 myOutputEnvVar_ToApply[envvar_name]=EnvVar(EnvVarName=envvar_name, EnvVarDefn= myEnvVarDefn, EnvVarValue=myEnvVarValue)
         return myOutputEnvVar_ToApply
+    
+    def GetProjectSettingsToApply(origProjectSettings={},project_settings_to_update={},myTemplateProjectValues=myTemplateProjectValues):
+        """
+        This can be simpler than the env var ones  (no need to check template file to find existing definitions , as this is simpler and will be fully defined in the config file)
+        For each variable in the project_settings_to_update
+           Check to see if exists in the template file
+        return a dictionary of project settings with values.
+        """
+        myOutputProjectSettingsToApply=origProjectSettings
+        for setting, value in project_settings_to_update.items():
+            logMessage.info('Processing ' + setting + ' ' + str(value))
+            myOutputProjectSettingsToApply[setting]=value
 
-    myOutputEnvVar_ToApply=GetEnvVarToApply(origEnvVar=origEnvVar,params_to_update=params_to_update)
+        
+        return myOutputProjectSettingsToApply
+    
+    def GetAutoPurgeSettingsToApply(origAutoPurge={},autopurge_settings_to_update={},myTemplateAutoPurgeValues=myTemplateAutoPurgeValues):
+
+        myOutput=origAutoPurge
+        for setting, value in autopurge_settings_to_update.items():
+            logMessage.info('Processing ' + setting + ' ' + str(value))
+            myOutput[setting]=value
+        
+        return myOutput
+        
+    myOutputEnvVar_ToApply=GetEnvVarToApply(origEnvVar=origEnvVar,params_to_update=params_to_update,myTemplateEnvVar=myTemplateEnvVar)
 
             ## Need to add some code here to do other sections
-    myOutputProjectSetting_ToApply=[]
-    myOutputAutoPurge_ToApply=[]
+    myOutputProjectSetting_ToApply=GetProjectSettingsToApply(origProjectSettings=origProjectSettings,project_settings_to_update=project_settings_to_update,myTemplateProjectValues=myTemplateProjectValues)
+    myOutputAutoPurge_ToApply=GetAutoPurgeSettingsToApply(origAutoPurge=origAutoPurge,autopurge_settings_to_update=autopurge_settings_to_update,myTemplateAutoPurgeValues=myTemplateAutoPurgeValues)
                     
     return myOutputEnvVar_ToApply,myOutputProjectSetting_ToApply,myOutputAutoPurge_ToApply
 
 
 
-def GetAmendedSettings(origSettings={}, templateDSParamsPath='' , settings_to_update=[], sectionName='PROJECT'):
+def GetAmendedSettings_NOTUSED(origSettings={}, templateDSParamsPath='' , settings_to_update=[], sectionName='PROJECT'):
     """
 
     ## TEMP VERSION.. maybe not needed 
@@ -727,11 +767,19 @@ def CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns'):
         ## Build up the pattern for matching the EnvVarValue format
         EnvVarValueFormat=r'^"(\w*)"\\(1)\\"(.*)"' 
         return EnvVarValueFormat
+    
+    elif section == 'PROJECT':
+        ProjectSettingFormat=r'^([\w\d]*)=([\w\d]*)' 
+        return ProjectSettingFormat
+    
+    elif section == 'AUTO-PURGE':
+        SettingFormat=r'^([\w\d]*)=([\w\d]*)' 
+        return SettingFormat
 
 
     
 
-def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings=[], standard_autopurge_settings=[], project_specific_params=[] ,project_specific_project_settings=[], project_specific_autopurge_settings=[]):
+def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings={}, standard_autopurge_settings={}, project_specific_params=[] ,project_specific_project_settings={}, project_specific_autopurge_settings={}):
 
     #dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings 
     """
@@ -748,6 +796,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
         """
         This logic need to be called in the loop, and when the loop finishes.
         Need to check...is f_temp here referencing the same object as f_temp outside this function?  ( That's what I want)
+
+        Should add in all variables as parms..get rid of global/shared
 
         """
         # If section change, and previous section was EnvVarDefns, need to make sure any EnvVarDefns which have not been processed from amendedEnvVars are written out.
@@ -778,12 +828,27 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                     new_value=env_var_object.print_value()
                     f_temp.write(new_value)
 
+        if previousSection == 'PROJECT' or previousSection == 'AUTO-PURGE':
+            if previousSection == 'PROJECT' :
+                #format=ProjectSettingFormat
+                amendedDictionary=amendedProjectSettings ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+            elif previousSection == 'AUTO-PURGE':
+                #format=AutoPurgeFormat
+                amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+            
+
+            sorted_amendedDictionary = {key: val for key, val in sorted(amendedDictionary.items(), key = lambda ele: ele[0])}
+            for setting, value in sorted_amendedDictionary.items():
+                logMessage.debug('processing ' + setting )
+                new_value=setting + '=' + str(value) + '\n'
+                f_temp.write(new_value) 
+
 
     #Main code for this function (CheckFixDSParams) 
     
     ## Get dictionary of all variables to amend. Start with empty, the apply the standard changes, then apply the project specific changes
-    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={}, origProjectSettings={}, origAutoPurge={},  templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
-    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar=amendedEnvVars,origProjectSettings=amendedProjectSettings,origAutoPurge=amendedAutoPurge, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params)
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={},            origProjectSettings={},                    origAutoPurge={},               templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params, project_settings_to_update=standard_project_settings, autopurge_settings_to_update=standard_autopurge_settings)
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar=amendedEnvVars,origProjectSettings=amendedProjectSettings,origAutoPurge=amendedAutoPurge, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params, project_settings_to_update=project_specific_project_settings, autopurge_settings_to_update=project_specific_autopurge_settings)
 
 
     
@@ -826,6 +891,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
     ## Define the record formats we will use
     EnvVarValueFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarValue')                            
     EnvVarDefnFormat = CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns')              
+    ProjectSettingFormat = CheckFixDSParams_CreateSectionPattern(section='PROJECT')              
+    AutoPurgeFormat = CheckFixDSParams_CreateSectionPattern(section='AUTO-PURGE')              
 
     for line in f:
                 
@@ -854,6 +921,8 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                     if envvar_name in amendedEnvVars:
                         line=amendedEnvVars[envvar_name].print_value()
                         amendedEnvVars[envvar_name].EnvVarValue = None
+                else:
+                    logMessage.warning("We're in EnvVarValues section, but line does not match the expected format. Line is :" + line)
               
 
 
@@ -874,13 +943,37 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                     if envvar_name in amendedEnvVars:
                         line=amendedEnvVars[envvar_name].print_definition()
                         # Remove the definition from amendedEnvVars once you've processed it ( so we know not to add it to end of the section in the output dsparms file). ( but leave the value - we need to set that later)
-                        amendedEnvVars[envvar_name].EnvVarDefn = None
-
+                        amendedEnvVars[envvar_name].EnvVarDefn = None                       
 
                 else:
                     logMessage.info('Line does not match expected format for a variable' + line)
                     # Would be nice to move this debug code to some other function, to keep this code a bit shorter. 
                     CheckFixDSParams_OutputDebugInfoForUnmatchedLineFormat(line)
+
+            if currentSection == 'PROJECT' or currentSection == 'AUTO-PURGE' :
+                
+                ## Check it matches expected format
+                if currentSection == 'PROJECT' :
+                    format=ProjectSettingFormat
+                    amendedDictionary=amendedProjectSettings ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+                elif currentSection == 'AUTO-PURGE':
+                    format=AutoPurgeFormat
+                    amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+                
+                result = re.search(format, line)
+                if result != None:
+                    setting=result[1]
+                    value=result[2]
+                    # Check if the variable is included in our variables that are to be amended.
+                    if setting in amendedDictionary:
+                        line=setting + '=' + amendedDictionary[setting] + '\n'
+                        #amendedProjectSettings[setting] = None # remove it , so we know not to add it on at the end.
+                        amendedDictionary.pop(setting)  #remove it , so we know not to add it on at the end.
+                else:
+                    logMessage.warning("We're in PROJECT section, but line does not match the expected format. Line is :" + line)
+                
+
+        
                     
 
         f_temp.write(line)
@@ -899,6 +992,15 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
         section_change_line='[EnvVarValues]\n'
         f_temp.write(section_change_line)
         SectionChangeLogic(previousSection='EnvVarValues', amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+
+    ## If AUTO-PURGE didnt exist at start , we need to add it on.
+    if auto_purge_found == False:
+        section_change_line='[AUTO-PURGE]\n'
+        f_temp.write(section_change_line)
+        SectionChangeLogic(previousSection='AUTO-PURGE', amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+    
+    
+
 
 
     f_temp.close() # This will close ( and finish writing to ) the temp file

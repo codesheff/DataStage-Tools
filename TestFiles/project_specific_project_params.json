@@ -57,13 +57,12 @@
             }
         ]
      },
-    { "PROJECT" : 
-        [
-            {
-                "ProjectSetting": "IPCTimeout",
-                "Value": 602
-            }      
-        ]
+     { "PROJECT" : 
+        {
+                "RTCPDefault": 1,
+                "RTCPEnabled": 1,
+                "IPCTimeout": 601
+        }      
     }
 ]
  

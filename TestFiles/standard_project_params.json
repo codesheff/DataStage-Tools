@@ -30,15 +30,17 @@
         ]
     },
     { "PROJECT" : 
-        [
-            {
-                "ProjectSetting": "RTCPDefault",
-                "Value": 1
-            },
-            {
-                "ProjectSetting": "IPCTimeout",
-                "Value": 600
-            }      
-        ]
+        {
+                "RTCPDefault": 1,
+                "IPCTimeout": 600,
+                "PXRemoteMachine": "Bob"
+        }
+    },
+    { "AUTO-PURGE" : 
+        {
+                "PurgeEnabled": 1,
+                "DaysOld": 3,
+                "PrevRuns": 0
+        }      
     }
 ]
