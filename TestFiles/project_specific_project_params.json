@@ -13,6 +13,7 @@
                 "PromptText" : "Prompty prompt prompt."
             },
             {
+                "Comment": "I added this because of issues x991 recorded in Jira line 'blah'",
                 "EnvVarName": "MyVariable2",
                 "Category": "User Defined",
                 "JobType": "-1",
