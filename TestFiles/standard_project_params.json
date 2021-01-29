@@ -29,11 +29,25 @@
             }
         ]
     },
+    { "PROJECT_Comments" : 
+        { "Comment PXMsgHandler=${vProjectName}" : "Maybe look at how to make this based on project name?"}
+    },
     { "PROJECT" : 
         {
-                "RTCPDefault": 1,
-                "IPCTimeout": 600,
-                "PXRemoteMachine": "Bob"
+            "JobAdminEnabled": 1,
+            "RTCPEnabled": 1,
+            "RTCPDefault": 1,
+            "JobSeqCheckPoints":1,
+            "JobSeqHandleAborts": 1,
+            "JobSeqLogJobErrors" :1,
+            "JobSeqLogJobReports" : 1,
+            "ReadCacheSize" : 128,
+            "WriteCacheSize" : 512,
+            "EnableRowBuffer" :1,
+            "UseIPC" : 1,
+            "IPCPort" : -1,
+            "IPCBufferSize" : 128,
+            "IPCTimeout" : 600            
         }
     },
     { "AUTO-PURGE" : 

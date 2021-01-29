@@ -60,9 +60,7 @@
      },
      { "PROJECT" : 
         {
-                "RTCPDefault": 1,
-                "RTCPEnabled": 1,
-                "IPCTimeout": 601
+           
         }      
     }
 ]
