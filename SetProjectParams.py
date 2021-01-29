@@ -9,6 +9,9 @@ STILL TO DO:
   See if you can create unit tests ( is it appropriate for this?)
   Check what can go into some SharedFunctions module ( probably want a better name for that)
 
+  See if any repeated logic that should be turned into functions instead
+  Move some functions to the general modules  and some to the datastage modules
+
 This script will 
   * take in path to a param file?( format?), which contains project parameter definitions.
   * take the standard DSParams from Template, 
@@ -542,116 +545,6 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
 
 
 
-def GetAmendedSettings_NOTUSED(origSettings={}, templateDSParamsPath='' , settings_to_update=[], sectionName='PROJECT'):
-    """
-
-    ## TEMP VERSION.. maybe not needed 
-    Update EnvVar object with definitions of variables that are in the 'params_to_update'
-
-    Start from template DSParams...then apply stuff from origEnvVar (ie. the dictionary you've already done some updates to ) then apply stuff from params_to_update ( e.g standard or project specific config)
-    """
-    #global logMessage
-    #try:
-    #    logMessage.debug('Starting function GetAmendedEnvVars')
-    #except:
-    #    from general_functions import LogMessage
-    #    logMessage=LogMessage(args.logfile)
-
-    # Get Full set of Env Var definitions from the DSParam file, and store as a EnvVar object
-    myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName=sectionName, pattern_toMatch=r'^.*$') 
-    myOutputEnvVar_ToApply = origSettings
-
-
-    ## Get values from project specific params, and apply them to the EnvVar object. params_to_update is a list of dictionaries, each dictionary defines a variable
-    ##    
-    for variable_definition in params_to_update:
-
-        ## ignore entries that do not contain 'EnvVarName' ( ie. skip past comments or any other invalid entries)
-        if 'EnvVarName'not in variable_definition:
-            continue
-
-        ## Look for the variable in the EnvVar object
-        envvar_name=variable_definition['EnvVarName']
-        if envvar_name in myTemplateEnvVar:
-            logMessage.info(envvar_name + ' exists in myTemplateEnvVar')
-            # Copy it to my output env var - nb. This is just creating new obj referencing the original..so updates will be seen in both! ( This should not matter though, in current process)
-            myOutputEnvVar_ToApply[envvar_name]=myTemplateEnvVar[envvar_name]
-
-            ## Check if it is user defined. ( for non-user defined, then we do not change the definition, only the value)
-            
-            if myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.Category == 'User Defined':
-                ## For user defined, update each variable based on what's in the params_to_update
-
-                ## Update existing User Defined Variable based on contents of variable_definition
-                if 'Type' in variable_definition:
-                    myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.Type = variable_definition['Type']
-                
-                if 'PromptText' in variable_definition:
-                    myOutputEnvVar_ToApply[envvar_name].EnvVarDefn.PromptText = variable_definition['PromptText']
-
-                if 'Default' in variable_definition:
-                    pass 
-                    # For 'Default' we actually set the value in the 
-                
-                if 'Default' in variable_definition:
-                    myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
-                else:
-                    # If variable is defined with no Default here, this should cause the variable to be unset.(i.e this overrides any previous default that existed in the template DSParam)
-                    myEnvVarValue = None
-                
-                myOutputEnvVar_ToApply[envvar_name].EnvVarValue = myEnvVarValue
-                
-            else: 
-                
-                myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
-                myOutputEnvVar_ToApply[envvar_name].EnvVarValue=myEnvVarValue
-                
-                
-
-        else:
-            ## This variable does not already exist, so will be created as user defined
-            ## e.g. MyUnsetVariable\User Defined\-1\String\\0\Project\This is my unset variable - it has no value set.\
-            logMessage.debug(envvar_name + ' does not exist in myEnvVar')
-
-            ## Create new User Defined Variable based on contents of variable_definition
-
-            if 'Default' in variable_definition:
-                myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
-            else:
-                # No need to store value object
-                myEnvVarValue = None
-                
-            # EnvVarName
-            # Type - defaults to String
-            # Default - will actualy be used to set the Value ( Default in definition will stay as empty)
-            # PromptText
-            if 'Type' in variable_definition:
-                varType=variable_definition['Type']
-            else:
-                varType='String'
-                
-            
-            if 'PromptText' in variable_definition:
-                varPromptText=variable_definition['PromptText']
-            else:
-                varPromptText=variable_definition['EnvVarName']
-                
-
-            myEnvVarDefn=EnvVarDefn(EnvVarName=envvar_name,
-                                        Category='User Defined' , 
-                                        JobType='-1' , 
-                                        Type=varType, 
-                                        Default='', 
-                                        SetAction='0', 
-                                        Scope='Project', 
-                                        PromptText=varPromptText, HelpText='hello')
-
-            # Now update  myEnvVar with the value and definition                    
-            myOutputEnvVar_ToApply[envvar_name]=EnvVar(EnvVarName=envvar_name, EnvVarDefn= myEnvVarDefn, EnvVarValue=myEnvVarValue)
-   
-
-    return myOutputEnvVar_ToApply
-
 
 def CheckFixDSParams_OutputDebugInfoForUnmatchedLineFormat(line):
         """
@@ -660,7 +553,7 @@ def CheckFixDSParams_OutputDebugInfoForUnmatchedLineFormat(line):
         """
 
         ## This bits for EnvVarDefn
-        pattern_separator=r'\\'
+        #pattern_separator=r'\\'
         pattern_EnvVarName=r'(\w*)'
         pattern_Category=r'(\w*[/\w ]*)'
         pattern_JobType=r'([-]*\d)'
@@ -963,7 +856,7 @@ def CheckFixDSParams(dsparams_path='/tmp/stetest1', templateDSParamsPath='', sta
                 result = re.search(format, line)
                 if result != None:
                     setting=result[1]
-                    value=result[2]
+                    # not required.value=result[2]
                     # Check if the variable is included in our variables that are to be amended.
                     if setting in amendedDictionary:
                         line=setting + '=' + amendedDictionary[setting] + '\n'
@@ -1178,10 +1071,10 @@ def main(arrgv=None):
     import grp 
     try: 
         adminName=GetDSAdminName()
-        adminGroup=GetDSAdminGroup()
+        # not used anywhere yet adminGroup=GetDSAdminGroup()
         
         uid=pwd.getpwnam(adminName).pw_uid  
-        gid=grp.getgrnam(adminGroup).gr_gid
+        # not used anywhere yet. gid=grp.getgrnam(adminGroup).gr_gid
     except KeyError:
         logMessage.error('Unable to find uid or gid for ' + adminName )
         sys.exit("\nUser not found.\n")
@@ -1209,7 +1102,7 @@ def main(arrgv=None):
 
     version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
     dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
-    dsenvfile=os.path.join(dshome,'dsenv')
+    # not used anywhere yet  dsenvfile=os.path.join(dshome,'dsenv')
     
 
     
