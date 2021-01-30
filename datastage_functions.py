@@ -70,8 +70,20 @@ def GetValuesFromVersionXML(VersionXMLPath='/iis/test/InformationServer/Version.
     f.close
     return(versionXMLValue)
 
+def GetDSAdminName(version_xml='/iis/test/InformationServer/Version.xml'):
+    """
+    This should be the standard way of getting the DataStage admin user name
+    """
+
+    from datastage_functions import GetValueFromVersionXML
+
+    #version_xml='/iis/01/InformationServer/Version.xml'
+    variable_name='datastage.user.name'
+    value=GetValueFromVersionXML(version_xml,variable_name )
 
 
-#value=GetValueFromVersionXML('/iis/01//InformationServer/Version.xml','datastage.user.name' )
-#value=GetValueFromVersionXML('/iis/01//InformationServer/Version.xml','lwas.home.dir' )
-#print('Value is '  + value)
+    
+
+
+    return value
+

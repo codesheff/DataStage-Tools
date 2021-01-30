@@ -336,52 +336,6 @@ def HandleInputParameters():
 
 
 
-def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
-    """
-    Compare original file and the new temp file  ( contents and permissions).
-    If they are the same, just remove the temp version. ( maybe not needed, handled in calling function)
-    If they are different, backup original and then replace teh orig_file with the new_temp_file
-
-    Return code values:
-    0: No changes made
-    1: Changes made
-    """
-
-
-    import os
-    import time
-    import shutil
-
-    # If file exists, 
-    if os.path.exists(orig_file):
-    
-        import filecmp
-        content_matches=filecmp.cmp(orig_file,new_temp_file)
-        permission_matches=os.stat(orig_file).st_mode == os.stat(new_temp_file).st_mode
-        user_matches=os.stat(orig_file).st_uid == os.stat(new_temp_file).st_uid
-        group_matches=os.stat(orig_file).st_gid == os.stat(new_temp_file).st_gid
-
-        logMessage.info( 'Checking file ' + orig_file + '. content_matches:' + str(content_matches) + '; permission_matches:' + str(permission_matches) + ';  user_matches:' + str(user_matches) + ';  group_matches:' + str(group_matches))
-
-        if content_matches and permission_matches and user_matches and group_matches:
-            logMessage.info(orig_file + ' is unchanged.')
-            os.remove(new_temp_file)
-            return 0
-        else:
-            # backup the original file
-            t = time.localtime()
-            backupfile=orig_file + time.strftime('%Y%m%d_%H%M%S', t)
-            shutil.copyfile(orig_file,backupfile)
-        
-    else:
-        logMessage.info(orig_file + ' - does not exist. Creating new file.')
-    
-    ## Only got to here if does not match  (ie new or different)
-    logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
-    #shutil.copyfile(new_temp_file, orig_file)
-    shutil.move(new_temp_file, orig_file)
-    
-    return 1
 
 
 
@@ -907,7 +861,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     #version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
     #dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
 
-
+    from datastage_functions import GetDSAdminName
     try: 
         adminName=GetDSAdminName(version_xml)
         adminGroup=GetDSAdminGroup(version_xml)
@@ -930,7 +884,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
         logMessage.error('Unable to set permissions on ' + fp.name + '. Trying to change to chmod 755 ' + fp.name )
         return None
     
-
+    from general_functions import ReplaceOldWithNewFile
     ReplaceOldWithNewFile(orig_file=dsparams_path, new_temp_file=fp.name)
 
     try: 
@@ -946,22 +900,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
 
 
 
-def GetDSAdminName(version_xml='/iis/test/InformationServer/Version.xml'):
-    """
-    This should be the standard way of getting the DataStage admin user name
-    """
 
-    from datastage_functions import GetValueFromVersionXML
-
-    #version_xml='/iis/01/InformationServer/Version.xml'
-    variable_name='datastage.user.name'
-    value=GetValueFromVersionXML(version_xml,variable_name )
-
-
-    
-
-
-    return value
     #return 'stedo'
 
 def GetDSAdminGroup(version_xml='/iis/test/InformationServer/Version.xml'):
@@ -1032,7 +971,7 @@ def main(arrgv=None):
 
     # Get input paramaters
     parser=HandleInputParameters()
-    #global args 
+    global args 
     args = parser.parse_args()
 
     ##global logMessage # Make it available to all 
@@ -1079,7 +1018,7 @@ def main(arrgv=None):
     version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
     dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
 
-
+    from datastage_functions import GetDSAdminName
     try: 
         adminName=GetDSAdminName(version_xml)
         # not used anywhere yet adminGroup=GetDSAdminGroup()

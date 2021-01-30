@@ -28,7 +28,17 @@ class LogMessage():
     def __init__(self,logfile='/tmp/logfile.txt'):
         
         self.log=self.__GetLogger(logfile)
-        self.info('Log file is ' + logfile)
+        #self.info('Log file is ' + logfile)
+        
+        for handler in self.log.handlers:
+            try:
+                logfile=handler.baseFilename
+                self.info('Log file is ' + logfile)
+            except:
+                pass
+                
+
+
     
     def __getFunctionNames(self):
         import traceback
@@ -72,6 +82,40 @@ class LogMessage():
     def __GetLogger(self, logfile='/tmp/logfile.txt'):
         import os
         import logging
+
+        ## new test.
+        import inspect
+        #func = inspect.currentframe().f_back.f_code
+
+        #inspect.getouterframes(inspect.currentframe())
+        #curframe = inspect.currentframe()
+        #calframe = inspect.getouterframes(curframe, 2)
+        #print('caller name:', calframe[1][3])
+
+        #print(func.co_name)
+        #print(func.co_filename)
+        #print(func.co_firstlineno)
+        #print(inspect.stack()[1][3])
+
+        current_stack=inspect.stack()
+
+        for frame in current_stack:
+            if frame[3] == 'main':
+                source_file=frame[1]
+                break
+
+        if source_file is None:
+            top_level_program='default'
+        else:
+            top_level_program=os.path.basename(source_file)
+
+        import getpass
+        current_user=getpass.getuser()
+
+        logfile=os.path.join('/tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
+
+
+        ## Should I find callling name, by looping through until I find 'main'?
 
         #Maybe this should be a class really. Something I set up once at start of script, rather than reimporting every time we log a message.
         # Set up logging 2x. One for logging to file, and one for logging to screen.
@@ -223,5 +267,64 @@ class GetCredentials():
       
         return parser
 
+def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
+    """
+    Compare original file and the new temp file  ( contents and permissions).
+    If they are the same, just remove the temp version. ( maybe not needed, handled in calling function)
+    If they are different, backup original and then replace teh orig_file with the new_temp_file
+
+    Return code values:
+    0: No changes made
+    1: Changes made
+    """
+
+    ## Well I've broken this by moving it to another module.
+    ## I need to read up on logging, and logging config files
+    #  https://docs.python.org/3.8/howto/logging.html#configuring-logging
+
+
+
+
+
+    import os
+    import time
+    import shutil
+
+    # If file exists, 
+    try:
+        type(logMessage) ## check if logMessage is already set up
+    except:
+        from general_functions import LogMessage
+        logMessage=LogMessage() # test just using default log file
+
+    if os.path.exists(orig_file):
+    
+        import filecmp
+        content_matches=filecmp.cmp(orig_file,new_temp_file)
+        permission_matches=os.stat(orig_file).st_mode == os.stat(new_temp_file).st_mode
+        user_matches=os.stat(orig_file).st_uid == os.stat(new_temp_file).st_uid
+        group_matches=os.stat(orig_file).st_gid == os.stat(new_temp_file).st_gid
+
+        logMessage.info( 'Checking file ' + orig_file + '. content_matches:' + str(content_matches) + '; permission_matches:' + str(permission_matches) + ';  user_matches:' + str(user_matches) + ';  group_matches:' + str(group_matches))
+
+        if content_matches and permission_matches and user_matches and group_matches:
+            logMessage.info(orig_file + ' is unchanged.')
+            os.remove(new_temp_file)
+            return 0
+        else:
+            # backup the original file
+            t = time.localtime()
+            backupfile=orig_file + time.strftime('%Y%m%d_%H%M%S', t)
+            shutil.copyfile(orig_file,backupfile)
         
+    else:
+        logMessage.info(orig_file + ' - does not exist. Creating new file.')
+    
+    ## Only got to here if does not match  (ie new or different)
+    logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
+    #shutil.copyfile(new_temp_file, orig_file)
+    shutil.move(new_temp_file, orig_file)
+    
+    return 1
+ 
       

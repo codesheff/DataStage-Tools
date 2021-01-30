@@ -1,0 +1,5 @@
+[2021-01-30 11:38:15,200] DEBUG    root         debug
+[2021-01-30 11:38:15,201] INFO     root         info
+[2021-01-30 11:38:15,201] WARNING  root         warning
+[2021-01-30 11:38:15,201] ERROR    root         error
+[2021-01-30 11:38:15,202] CRITICAL root         critical

@@ -1,31 +1,80 @@
 [
     {
-        "Comment" : "This is my comment on how to use this file. It has none of the required fields, and so should be ignored by the scripts that process it."
-
+        "Comment" : "This is my comment on how to use this file. It has none of the required fields, and so should be ignored by the scripts that process it.",
+        "Comment2" : "variables used in here are installBase, tempBase"
     },
     { "EnvVarDefns" : 
         [
             {
-                "Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
-                "EnvVarName": "MyStandardVariable1",
-                "Category": "User Defined",
-                "JobType": "-1", 
-                "Type": "String",
-                "Default": "default_value",
-                "SetAction" : "0",
-                "Scope" :  "Project",
-                "PromptText" : "Prompt for a standard variable."
+                "Comment": "This is an existing variable, so we just need to give the default value here.",
+                "EnvVarName": "TMPDIR",
+                "Default": "${tempBase}/tmp/tmpdir"
             },
             {
-                "Comment": "This allows me to comment on a particular parameter. Comment will be ignored in scripts that process it.",
-                "EnvVarName": "MyStandardVariable2",
+                "Comment": "",
+                "EnvVarName": "TEMP",
                 "Category": "User Defined",
                 "JobType": "-1", 
                 "Type": "String",
-                "Default": "default_value2",
+                "Default": "${tempBase}/tmp/temp",
                 "SetAction" : "0",
                 "Scope" :  "Project",
-                "PromptText" : "Prompt for a standard variable2."
+                "PromptText" : "TEMP."
+            },
+            {
+                "Comment": "",
+                "EnvVarName": "TMP",
+                "Category": "User Defined",
+                "JobType": "-1", 
+                "Type": "String",
+                "Default": "${tempBase}/tmp/tmp",
+                "SetAction" : "0",
+                "Scope" :  "Project",
+                "PromptText" : "TMP."
+            },
+            {
+                "Comment": "",
+                "EnvVarName": "APT_VIEWDATA_TEMP_DIR",
+                "Category": "User Defined",
+                "JobType": "-1", 
+                "Type": "String",
+                "Default": "${tempBase}/tmp/viewdata",
+                "SetAction" : "0",
+                "Scope" :  "Project",
+                "PromptText" : "APT_VIEWDATA_TEMP_DIR."
+            },
+            {
+                "Comment": "",
+                "EnvVarName": "APT_FIFO_DIRECTORY",
+                "Category": "User Defined",
+                "JobType": "-1", 
+                "Type": "String",
+                "Default": "${tempBase}/tmp/fifo",
+                "SetAction" : "0",
+                "Scope" :  "Project",
+                "PromptText" : "APT_FIFO_DIRECTORY."
+            },
+            {
+                "Comment": "",
+                "EnvVarName": "APT_DYNAMIC_IO_PATTERN",
+                "Category": "User Defined",
+                "JobType": "-1", 
+                "Type": "String",
+                "Default": "1",
+                "SetAction" : "0",
+                "Scope" :  "Project",
+                "PromptText" : "APT_DYNAMIC_IO_PATTERN. Allows jobs to read datasets created on different servers or different apt configs"
+            },
+            {
+                "Comment": "",
+                "EnvVarName": "TNS_ADMIN",
+                "Category": "User Defined",
+                "JobType": "-1", 
+                "Type": "String",
+                "Default": "${installBase}/DBClients/Oracle/TNS_ADMIN",
+                "SetAction" : "0",
+                "Scope" :  "Project",
+                "PromptText" : "TNS_ADMIN - Location for Oracle config file directory TNS_ADMIN."
             }
         ]
     },
