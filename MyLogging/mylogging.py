@@ -1,11 +1,38 @@
+#!/usr/bin/env python3
+
+"""
+This was written to try and get a standard way of doing logs.
+Make available 
+    logMessage.info()
+    logMessage.debug()  etc
+
+
+
+Example for using it:
+    
+    from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
+    global logMessage
+    logMessage=LogMessage()
+
+    
+    if getLogFile() is None:
+        setLogFile(mylogfilepath)
+
+    
+
+"""
+
 import logging
 import logging.config
 
-import globals  #globals has the path to the config file. Could maybe move it to here
+#import MyLogging.globals  #globals has the path to the config file. Could maybe move it to here
 
 import os
 
 
+#What's best way to define this? Relative path I guess? Also, check this exists and give decent error if it doesn't
+#logging_conf='/iis_backup/DataStage-Tools/MyLogging/logging.conf'
+logging_conf=os.path.join(os.path.dirname(__file__),'logging.conf')
 
 
 
@@ -31,7 +58,7 @@ def setLogFile(log_file):
         os.makedirs(log_dir,0o755)
       
 
-    logging.config.fileConfig(globals.logging_conf, disable_existing_loggers=False)
+    logging.config.fileConfig(logging_conf, disable_existing_loggers=False)
     
     return None
 

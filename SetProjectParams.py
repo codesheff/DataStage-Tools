@@ -305,10 +305,12 @@ def HandleInputParameters():
     this_script_path=(os.path.dirname(sys.argv[0]))
     
     # this_script_name=(os.path.basename(sys.argv[0]))
-    datadir=os.path.join(this_script_path,"data") # Ah!  you don't want the '/' in your args - makes sense!
+    #datadir=os.path.join(this_script_path,"data") # Not required
     
     
-    default_logfile=os.path.join(datadir,"default_log_file.txt")
+    #default_logfile=os.path.join(datadir,"default_log_file.txt")
+    from general_functions import MakeALogFileName
+    default_logfile=MakeALogFileName()
     
 
     #default_DSParams_template=os.path.abspath(os.path.join(this_script_path, 'TestFiles','DSParams.template'))
@@ -861,7 +863,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     #version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
     #dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
 
-    from datastage_functions import GetDSAdminName
+    from datastage_functions import GetDSAdminName,GetDSAdminGroup
     try: 
         adminName=GetDSAdminName(version_xml)
         adminGroup=GetDSAdminGroup(version_xml)
@@ -903,51 +905,8 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
 
     #return 'stedo'
 
-def GetDSAdminGroup(version_xml='/iis/test/InformationServer/Version.xml'):
-    """
-    This should be the standard way of getting the DataStage admin users group
-    """
-
-    from datastage_functions import GetValueFromVersionXML
-
-    
-    variable_name='ds.admin.gid'
-    value=GetValueFromVersionXML(version_xml,variable_name )
-    return value
-
-def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/InformationServer/Server/DSEngine'):
-    """
-    This needs recoding to work this out correctly.
-    Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
-    """
-    import os
-    import subprocess
-    
-    import re
-
-    #project_base_path='/iis/01/InformationServer/Server/Projects/'
-    #project_path=os.path.join(project_base_path, project_name )
-
-    #dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
-    #project_name='dstage1' - input param
-    #dsadm_user='dsadm'
-    
-    dsenv=os.path.join(dshome,'dsenv')
-    dsjobcommand=os.path.join(dshome,'bin/dsjob')
-    command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -projectinfo ' + project_name
-    sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
-    
-    #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
-    result = subprocess.run([sudo_command] , capture_output=True, shell=True, encoding="UTF-8")
 
 
-
-    if result.returncode != 0:
-        return None
-    else:
-        pattern=r'^Project Path\t: (.*)'
-        projectpath = re.search(pattern,result.stdout)[1]
-        return(projectpath)
 
 
     
@@ -974,10 +933,16 @@ def main(arrgv=None):
     global args 
     args = parser.parse_args()
 
-    ##global logMessage # Make it available to all 
-    from general_functions import LogMessage
+   
+    #import MyLogging.mylogging
+
+    from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
     global logMessage
-    logMessage=LogMessage(args.logfile)
+    logMessage=LogMessage()
+
+    #test = getLogFile()
+    #if getLogFile() is None:
+    setLogFile(args.logfile)
 
     
     #Check input params
@@ -1018,7 +983,7 @@ def main(arrgv=None):
     version_xml=os.path.join(args.install_base,'InformationServer', 'Version.xml')
     dshome=os.path.join(args.install_base,'InformationServer','Server', 'DSEngine')
 
-    from datastage_functions import GetDSAdminName
+    from datastage_functions import GetDSAdminName,GetDSAdminGroup
     try: 
         adminName=GetDSAdminName(version_xml)
         # not used anywhere yet adminGroup=GetDSAdminGroup()
@@ -1062,7 +1027,7 @@ def main(arrgv=None):
     for project in project_list:
      
         
-        
+        from datastage_functions import GetProjectPath
         project_path=GetProjectPath(project_name=project,dsadm_user=dsadm_user, dshome=dshome)
         if project_path is None:
             logMessage.warning('Skipping ' + project + ' . Unable to find project path.')
@@ -1082,9 +1047,4 @@ def main(arrgv=None):
     
 
 if __name__=="__main__":
-    import sys
-    # Define global variables
-    args=''
-    logMessage=''
-    logMessage=''
     main()

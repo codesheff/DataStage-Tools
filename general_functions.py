@@ -5,18 +5,43 @@ This will be used to store functions that are generally of use in our scripting.
 This can be used to help give a standard behaviour to all our scripts.
 """
 
+   #import MyLogging.mylogging 
+from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
+global logMessage
+logMessage=LogMessage()
 
-def SayHi():
-    """
-    return 'Hi'
-    """
-
-    return 'Hi'
+    #test = getLogFile()
+if getLogFile() is None:
+    setLogFile('/tmp/logs/stetest_general_functions.log')
 
 
 
+def MakeALogFileName():
+    import inspect
+    import os 
+    current_stack=inspect.stack()
 
-class LogMessage():
+    for frame in current_stack:
+        if frame[3] == 'main':
+            source_file=frame[1]
+            break
+
+    if source_file is None:
+        top_level_program='default'
+    else:
+        top_level_program=os.path.basename(source_file)
+
+    import getpass
+    current_user=getpass.getuser()
+
+    logfile=os.path.join('/tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
+
+    return logfile
+
+
+
+
+class LogMessage_donotuse():
 
     """
     This will setup up message logging.
@@ -84,7 +109,7 @@ class LogMessage():
         import logging
 
         ## new test.
-        import inspect
+       
         #func = inspect.currentframe().f_back.f_code
 
         #inspect.getouterframes(inspect.currentframe())
@@ -97,6 +122,7 @@ class LogMessage():
         #print(func.co_firstlineno)
         #print(inspect.stack()[1][3])
 
+        import inspect
         current_stack=inspect.stack()
 
         for frame in current_stack:
@@ -203,7 +229,11 @@ class GetCredentials_old():
         
         args, unknown = parser.parse_known_args() # use 'unknown' to handle unrecognised args
 
-        args.funct_getlogon(args) #This line sets user dfaults
+        if unknown == 'this is just to get rid of the "unused variable message"': #Is there a better way of doing this?
+            pass
+        
+
+        args.funct_getlogon(args) #This line sets user defaults
 
       
         return args

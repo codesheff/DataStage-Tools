@@ -3,7 +3,7 @@
 #print('Hello')
 
 
-def GetValueFromVersionXML(VersionXMLPath='/iis/test//InformationServer/Version.xml' ,VariableName='datastage.user.name'):
+def GetValueFromVersionXML(VersionXMLPath='/iis/test/InformationServer/Version.xml' ,VariableName='datastage.user.name'):
     """
     return value for 'VariableName' in Version.xml file
     """
@@ -55,7 +55,7 @@ def GetValuesFromVersionXML(VersionXMLPath='/iis/test/InformationServer/Version.
         if result == None:
             continue
 
-        # Not sure if other fiels are useful yet, so just getting nama and value
+        # Not sure if other fields are useful yet, so just getting nama and value
         #encrypted=result[1]
         name=result[2]
         #persistent=result[3]
@@ -80,10 +80,62 @@ def GetDSAdminName(version_xml='/iis/test/InformationServer/Version.xml'):
     #version_xml='/iis/01/InformationServer/Version.xml'
     variable_name='datastage.user.name'
     value=GetValueFromVersionXML(version_xml,variable_name )
+    
+    return value
 
+
+def GetDSAdminGroup(version_xml='/iis/test/InformationServer/Version.xml'):
+    """
+    This should be the standard way of getting the DataStage admin users group
+    """
+
+    from datastage_functions import GetValueFromVersionXML
 
     
+    variable_name='ds.admin.gid'
+    value=GetValueFromVersionXML(version_xml,variable_name )
+    return value
 
 
     return value
+
+def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/InformationServer/Server/DSEngine'):
+    """
+    This needs recoding to work this out correctly.
+    Using uvsh, of other DS provided methods requires DataStage to be up. That's ok for me.
+    """
+    import os
+    import subprocess
+    
+    import re
+
+    #project_base_path='/iis/01/InformationServer/Server/Projects/'
+    #project_path=os.path.join(project_base_path, project_name )
+
+    #dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
+    #project_name='dstage1' - input param
+    #dsadm_user='dsadm'
+    
+    dsenv=os.path.join(dshome,'dsenv')
+    dsjobcommand=os.path.join(dshome,'bin/dsjob')
+    command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -projectinfo ' + project_name
+    sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
+    
+    #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
+    result = subprocess.run([sudo_command] , capture_output=True, shell=True, encoding="UTF-8")
+
+
+
+    if result.returncode != 0:
+        return None
+    else:
+        pattern=r'^Project Path\t: (.*)'
+        projectpath = re.search(pattern,result.stdout)[1]
+        return(projectpath)
+
+
+
+if __name__== "__main__" :
+    print('Not intended to be run as a script.')
+
 

@@ -54,7 +54,7 @@
             },
             {
                 "EnvVarName": "NewProjVar",
-                "Default": "This is new one created in project specific config"
+                "Default": "This is new one created in project specific config. It's fab."
             }
         ]
      },
