@@ -373,12 +373,12 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
     try:
         os.chown(orig_file,new_user,new_group)
     except PermissionError:
-        logMessage.error('Unable to set ownership on ' + orig_file + '. Trying to change to chown ' + new_user + ':' + new_group() + ' ' + fp.name )
+        logMessage.error('Unable to set ownership on ' + orig_file + '. Trying to change to chown ' + new_user + ':' + new_group() )
        
     try:
         os.chmod(orig_file,new_permission)  
     except:
-        logMessage.error('Unable to set permissions  on ' + orig_file + '. Trying to change to chmod ' +  ' + fp.name ')
+        logMessage.error('Unable to set permissions  on ' + orig_file + '. Trying to change to chmod ' + orig_file + ' '  + new_permission  )
    
     
     return 1
