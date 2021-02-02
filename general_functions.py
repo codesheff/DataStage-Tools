@@ -354,6 +354,7 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
     logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
     #shutil.copyfile(new_temp_file, orig_file)
     shutil.move(new_temp_file, orig_file)
+   
     
     return 1
  

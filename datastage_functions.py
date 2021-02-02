@@ -115,14 +115,23 @@ def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/
     #dsenvfile='/iis/01/InformationServer/Server/DSEngine/dsenv'
     #project_name='dstage1' - input param
     #dsadm_user='dsadm'
+
+    import getpass
+    current_user=getpass.getuser()
     
     dsenv=os.path.join(dshome,'dsenv')
     dsjobcommand=os.path.join(dshome,'bin/dsjob')
     command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -projectinfo ' + project_name
     sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
+
+    if current_user == dsadm_user:
+        command_to_run = command
+    else:
+        command_to_run = sudo_command
+    
     
     #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
-    result = subprocess.run([sudo_command] , capture_output=True, shell=True, encoding="UTF-8")
+    result = subprocess.run([command_to_run] , capture_output=True, shell=True, encoding="UTF-8")
 
 
 

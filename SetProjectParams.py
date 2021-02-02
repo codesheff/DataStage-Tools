@@ -877,7 +877,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     try:
         os.chown(fp.name,uid,gid)
     except PermissionError:
-        logMessage.error('Unable to set ownership on ' + fp.name + '. Trying to change to chown ' + GetDSAdminName() + ':' + GetDSAdminName() + ' ' + fp.name )
+        logMessage.error('Unable to set ownership on ' + fp.name + '. Trying to change to chown ' + adminName + ':' + adminGroup() + ' ' + fp.name )
         return None
     
     try:
@@ -1038,10 +1038,12 @@ def main(arrgv=None):
 
         if os.path.exists(dsparams_path):
             logMessage.info('Processing ' + dsparams_path)
-            ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
-            CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
         else:
-            logMessage.warning('Skipping ' + project + ' . Unable to find DSParams file ' + dsparams_path) 
+            logMessage.warning('Unable to find DSParams file ' + dsparams_path + '. A new file will be created.') 
+        
+        ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
+        CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
+        
 
         
     
