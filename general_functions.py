@@ -330,10 +330,22 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
     if os.path.exists(orig_file):
     
         import filecmp
+        #content_matches=filecmp.cmp(orig_file,new_temp_file)
+        #permission_matches=os.stat(orig_file).st_mode == os.stat(new_temp_file).st_mode
+        #user_matches=os.stat(orig_file).st_uid == os.stat(new_temp_file).st_uid
+        #group_matches=os.stat(orig_file).st_gid == os.stat(new_temp_file).st_gid
+
+        orig_permission=os.stat(orig_file).st_mode
+        new_permission=os.stat(new_temp_file).st_mode
+        orig_user=os.stat(orig_file).st_uid 
+        new_user=os.stat(new_temp_file).st_uid 
+        orig_group=os.stat(orig_file).st_gid
+        new_group=os.stat(new_temp_file).st_gid
+
         content_matches=filecmp.cmp(orig_file,new_temp_file)
-        permission_matches=os.stat(orig_file).st_mode == os.stat(new_temp_file).st_mode
-        user_matches=os.stat(orig_file).st_uid == os.stat(new_temp_file).st_uid
-        group_matches=os.stat(orig_file).st_gid == os.stat(new_temp_file).st_gid
+        permission_matches=orig_permission == new_permission
+        user_matches=orig_user == new_user
+        group_matches=orig_group == new_group
 
         logMessage.info( 'Checking file ' + orig_file + '. content_matches:' + str(content_matches) + '; permission_matches:' + str(permission_matches) + ';  user_matches:' + str(user_matches) + ';  group_matches:' + str(group_matches))
 
@@ -342,6 +354,8 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
             os.remove(new_temp_file)
             return 0
         else:
+            logMessage.info( orig_file + 'Permission: ' + str(orig_permission) + ', owner: ' +  str(orig_user) + ', group :' + str(orig_group) ) 
+            logMessage.info( new_temp_file + 'Permission: ' + str(new_permission) + ', owner: ' +  str(new_user) + ', group :' + str(new_group) ) 
             # backup the original file
             t = time.localtime()
             backupfile=orig_file + time.strftime('%Y%m%d_%H%M%S', t)
@@ -354,6 +368,17 @@ def ReplaceOldWithNewFile(orig_file='', new_temp_file=''):
     logMessage.info(orig_file + ' - has been amended. ( to match ' + new_temp_file + ' )')
     #shutil.copyfile(new_temp_file, orig_file)
     shutil.move(new_temp_file, orig_file)
+
+    ## On some test servers this doesn't end up with correct ownership and permissions. So adding this to get round it
+    try:
+        os.chown(orig_file,new_user,new_group)
+    except PermissionError:
+        logMessage.error('Unable to set ownership on ' + orig_file + '. Trying to change to chown ' + new_user + ':' + new_group() + ' ' + fp.name )
+       
+    try:
+        os.chmod(orig_file,new_permission)  
+    except:
+        logMessage.error('Unable to set permissions  on ' + orig_file + '. Trying to change to chmod ' +  ' + fp.name ')
    
     
     return 1
