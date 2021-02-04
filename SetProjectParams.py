@@ -720,16 +720,72 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
 
 
                     f_temp.write(value)
+        
+        if previousSection == 'AUTO-PURGE':
+            #format=AutoPurgeFormat
+            amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+            # PurgeEnabled needs to be the first line written for AUTO-PURGE, so process that one now.
+            # In fact, there's only 3 fields, order matters, and we need defaults if they're not supplied, so put them all here.
 
-        if previousSection == 'PROJECT' or previousSection == 'AUTO-PURGE':
-            if previousSection == 'PROJECT' :
-                #format=ProjectSettingFormat
-                amendedDictionary=amendedProjectSettings ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
-            elif previousSection == 'AUTO-PURGE':
-                #format=AutoPurgeFormat
-                amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+            # Validate what's in the AUTO-PURGE settings
+
+            if 'PurgeEnabled' not in amendedDictionary:
+                amendedDictionary['PurgeEnabled'] = 0
+            if 'DaysOld' not in amendedDictionary:
+                amendedDictionary['DaysOld'] = 0
+            if 'PrevRuns' not in amendedDictionary:
+                amendedDictionary['PrevRuns'] = 0
+
+            if amendedDictionary['PurgeEnabled'] not in [0,1]:
+                logMessage.warning('PurgeEnabled is must be to 0 or 1. Config file contains : ' + str(amendedDictionary['PurgeEnabled']) + '. Defaulting to 1')
+                amendedDictionary['PurgeEnabled'] = 1 
+
+
+            if amendedDictionary['PurgeEnabled'] == 0:
+                if 'DaysOld' in amendedDictionary:
+                    if amendedDictionary['DaysOld'] != 0 :
+                        logMessage.warning('PurgeEnabled is set to 0. DaysOld must be 0')
+                        amendedDictionary['DaysOld'] = 0
+                if 'PrevRuns' in amendedDictionary:
+                    if amendedDictionary['PrevRuns'] != 0 :
+                        logMessage.warning('PurgeEnabled is set to 0. PrevRuns must be 0')
+                        amendedDictionary['PrevRuns'] = 0
+
+            # If enabled, then either DaysOld or PrevRuns must be set
+            if amendedDictionary['PurgeEnabled'] == 1:
+                if amendedDictionary['DaysOld'] == 0 and amendedDictionary['PrevRuns'] == 0:
+                    logMessage.warning('PurgeEnabled is set to 1. Either DaysOld or PrevRuns must be greater than 0. Setting DaysOld to 1')
+                    amendedDictionary['DaysOld'] = 1
+                    
+
             
+            # Write out the values
+            if 'PurgeEnabled' in amendedDictionary:
+                amended_value=amendedDictionary.pop('PurgeEnabled')
+            else:
+                amended_value=0
 
+            new_value='PurgeEnabled' + '=' + str(amended_value) + '\n'
+            f_temp.write(new_value)
+                
+            if 'DaysOld' in amendedDictionary:
+                amended_value=amendedDictionary.pop('DaysOld')
+            else:
+                amended_value=0
+
+            new_value='DaysOld' + '=' + str(amended_value) + '\n'
+            f_temp.write(new_value)  
+
+            if 'PrevRuns' in amendedDictionary:
+                amended_value=amendedDictionary.pop('PrevRuns')
+            else:
+                amended_value=0
+
+            new_value='PrevRuns' + '=' + str(amended_value) + '\n'
+            f_temp.write(new_value)  
+
+        if previousSection == 'PROJECT':
+            amendedDictionary=amendedProjectSettings ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
             sorted_amendedDictionary = {key: val for key, val in sorted(amendedDictionary.items(), key = lambda ele: ele[0])}
             for setting, value in sorted_amendedDictionary.items():
                 logMessage.debug('processing ' + setting )
