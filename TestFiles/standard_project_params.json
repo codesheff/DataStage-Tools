@@ -79,7 +79,7 @@
         ]
     },
     { "PROJECT_Comments" : 
-        { "Comment PXMsgHandler=${vProjectName}" : "Maybe look at how to make this based on project name?"}
+        { "Comment PXMsgHandler=${projectName}" : "Maybe look at how to make this based on project name?"}
     },
     { "PROJECT" : 
         {
@@ -96,7 +96,8 @@
             "UseIPC" : 1,
             "IPCPort" : -1,
             "IPCBufferSize" : 128,
-            "IPCTimeout" : 600            
+            "IPCTimeout" : 600  ,
+            "PXMsgHandler" : "${projectName}" 
         }
     },
     { "AUTO-PURGE" : 

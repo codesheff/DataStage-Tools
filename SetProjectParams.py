@@ -72,7 +72,7 @@ def GetProjectParamConfig(filePath='',configType='EnvVarDefns'):
 
 
     import json
-
+    
     with open(filePath) as json_file:
         data = json.load(json_file)
 
@@ -81,6 +81,8 @@ def GetProjectParamConfig(filePath='',configType='EnvVarDefns'):
     config={}
     for item in data:
         if configType in item:
+
+            ## replace standard variables with their values:
             config = item[configType]
             break
 
@@ -321,6 +323,7 @@ def HandleInputParameters():
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--install-base", type=str, dest="install_base", help="The base of the DS install. e.g /iis/test .", default='/iis/test', required=True) # Setting all to false here as it's making testing easier
+    parser.add_argument("--temp-base", type=str, dest="temp_base", help="The base of the temp/scratch location.  e.g /scratch", default='/scratch')
     parser.add_argument("--project-name", action='append', type=str, dest="project_list", help="project to check, and apply changes to ", required=True)
 
     parser.add_argument("--logfile", type=str, dest="logfile", help="the logfile to be processed", default=default_logfile)
@@ -330,6 +333,7 @@ def HandleInputParameters():
     
     parser.add_argument("--project-specific-params-file", type=str, dest="project_specific_params_file", help="json file for project specific params", default=default_project_specific_params)
     parser.add_argument("--standard-params-file", type=str, dest="standard_params_file", help="json file for standard params", default=default_standard_params)
+    
     
     
     return parser
@@ -342,7 +346,7 @@ def HandleInputParameters():
 
 
 
-def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  templateDSParamsPath='' , params_to_update=[],project_settings_to_update={}, autopurge_settings_to_update={}):
+def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  templateDSParamsPath='' , params_to_update=[],project_settings_to_update={}, autopurge_settings_to_update={}, install_base='/iis/example', temp_base='/scratch/example',project_name='dstage1'):
     """
     Update EnvVar object with definitions of variables that are in the 'params_to_update'
 
@@ -366,7 +370,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
     #EnvVars, ProjectValues, AutoPurgeValues
     myTemplateEnvVar, myTemplateProjectValues, myTemplateAutoPurgeValues =GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
     #myTemplateEnvVar=GetDSParamValues(filePath=templateDSParamsPath, sectionName='EnvVarDefns', pattern_toMatch=r'^.*$') 
-    def GetEnvVarToApply(origEnvVar={},params_to_update=[],myTemplateEnvVar=myTemplateEnvVar):
+    def GetEnvVarToApply(origEnvVar={},params_to_update=[],myTemplateEnvVar=myTemplateEnvVar, install_base='/iis/example', temp_base='/scratch/example', project_name='dstage1'):
         
 
         """
@@ -421,8 +425,17 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
                     myOutputEnvVar_ToApply[envvar_name].EnvVarValue = myEnvVarValue
                     
                 else: 
-                    
-                    myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
+                    # Add code here to replace standard variables with values ( ${tempBase} and ${installBase})
+                    ##  If we need to add more variables here, then it's worth doing this in a nicer way.
+
+                    value=ReplaceVariablesInValue(variable_definition['Default'],install_base=install_base, temp_base=temp_base, project_name=project_name)
+                    #mypatter=r'\${tempBase}' 
+                    #result = re.sub(mypatter,temp_base, variable_definition['Default'])
+                    #mypatter=r'\${installBase}' 
+                    #result1 = re.sub(mypatter,install_base, result)
+
+                    #myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
+                    myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=value )
                     myOutputEnvVar_ToApply[envvar_name].EnvVarValue=myEnvVarValue
                     
                     
@@ -435,6 +448,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
                 ## Create new User Defined Variable based on contents of variable_definition
 
                 if 'Default' in variable_definition:
+                    value=ReplaceVariablesInValue(variable_definition['Default'],install_base=install_base, temp_base=temp_base, project_name=project_name)
                     myEnvVarValue=EnvVarValue(EnvVarName=envvar_name, EnvVarValue=variable_definition['Default'] )
                 else:
                     # No need to store value object
@@ -493,7 +507,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
         
         return myOutput
         
-    myOutputEnvVar_ToApply=GetEnvVarToApply(origEnvVar=origEnvVar,params_to_update=params_to_update,myTemplateEnvVar=myTemplateEnvVar)
+    myOutputEnvVar_ToApply=GetEnvVarToApply(origEnvVar=origEnvVar,params_to_update=params_to_update,myTemplateEnvVar=myTemplateEnvVar, install_base=install_base, temp_base=temp_base, project_name=project_name)
 
             ## Need to add some code here to do other sections
     myOutputProjectSetting_ToApply=GetProjectSettingsToApply(origProjectSettings=origProjectSettings,project_settings_to_update=project_settings_to_update,myTemplateProjectValues=myTemplateProjectValues)
@@ -628,9 +642,20 @@ def CheckFixDSParams_CreateSectionPattern(section='EnvVarDefns'):
         return SettingFormat
 
 
-    
+def ReplaceVariablesInValue(value='', install_base='/iis/example', temp_base='/scratch/example', project_name='dstage1'):
 
-def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings={}, standard_autopurge_settings={}, project_specific_params=[] ,project_specific_project_settings={}, project_specific_autopurge_settings={}):
+    # Add code here to replace standard variables with values ( ${tempBase} and ${installBase})
+    ##  If we need to add more variables here, then it's worth doing this in a nicer way.
+    mypatter=r'\${tempBase}' 
+    result = re.sub(mypatter,temp_base, value)
+    mypatter=r'\${installBase}' 
+    result1 = re.sub(mypatter,install_base, result)
+    mypatter=r'\${projectName}' 
+    result2 = re.sub(mypatter,project_name, result1)
+
+    return result2
+
+def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dsparams_path='/tmp/stetest1', templateDSParamsPath='', standard_params=[], standard_project_settings={}, standard_autopurge_settings={}, project_specific_params=[] ,project_specific_project_settings={}, project_specific_autopurge_settings={},install_base='/iis/example', temp_base='/scratch/example', project_name='dstage1'):
 
     #dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings 
     """
@@ -643,7 +668,9 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     """
 
 
-    def SectionChangeLogic(previousSection='', amendedEnvVars={}, f_temp=''):
+
+
+    def SectionChangeLogic(previousSection='', amendedEnvVars={}, f_temp='', install_base='/iis/example', temp_base='/scratch/example/', project_name=project_name):
         """
         This logic need to be called in the loop, and when the loop finishes.
         Need to check...is f_temp here referencing the same object as f_temp outside this function?  ( That's what I want)
@@ -677,7 +704,22 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
                     logMessage.debug('processing value  for  ' + env_var_name )
                     # Write the values of the new variable out
                     new_value=env_var_object.print_value()
-                    f_temp.write(new_value)
+
+
+                    value = ReplaceVariablesInValue(new_value,install_base=install_base, temp_base=temp_base,project_name=project_name)
+
+                    ## Add code here to replace standard variables with values ( ${tempBase} and ${installBase})
+                    ###  If we need to add more variables here, then it's worth doing this in a nicer way.
+                    #mypatter=r'\${tempBase}' 
+                    #result = re.sub(mypatter,temp_base, new_value)
+                    #mypatter=r'\${installBase}' 
+                    #result1 = re.sub(mypatter,install_base, result)
+
+
+
+
+
+                    f_temp.write(value)
 
         if previousSection == 'PROJECT' or previousSection == 'AUTO-PURGE':
             if previousSection == 'PROJECT' :
@@ -691,15 +733,17 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
             sorted_amendedDictionary = {key: val for key, val in sorted(amendedDictionary.items(), key = lambda ele: ele[0])}
             for setting, value in sorted_amendedDictionary.items():
                 logMessage.debug('processing ' + setting )
-                new_value=setting + '=' + str(value) + '\n'
+                
+                amended_value = ReplaceVariablesInValue(str(value),install_base=install_base, temp_base=temp_base,project_name=project_name)
+                new_value=setting + '=' + amended_value + '\n'
                 f_temp.write(new_value) 
 
 
     #Main code for this function (CheckFixDSParams) 
     
     ## Get dictionary of all variables to amend. Start with empty, the apply the standard changes, then apply the project specific changes
-    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={},            origProjectSettings={},                    origAutoPurge={},               templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params, project_settings_to_update=standard_project_settings, autopurge_settings_to_update=standard_autopurge_settings)
-    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar=amendedEnvVars,origProjectSettings=amendedProjectSettings,origAutoPurge=amendedAutoPurge, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params, project_settings_to_update=project_specific_project_settings, autopurge_settings_to_update=project_specific_autopurge_settings)
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={},            origProjectSettings={},                    origAutoPurge={},               templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params, project_settings_to_update=standard_project_settings, autopurge_settings_to_update=standard_autopurge_settings, install_base=install_base, temp_base=temp_base, project_name=project_name)
+    amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar=amendedEnvVars,origProjectSettings=amendedProjectSettings,origAutoPurge=amendedAutoPurge, templateDSParamsPath=templateDSParamsPath , params_to_update=project_specific_params, project_settings_to_update=project_specific_project_settings, autopurge_settings_to_update=project_specific_autopurge_settings,install_base=install_base, temp_base=temp_base,project_name=project_name)
 
 
     
@@ -759,7 +803,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
             if currentSection == 'AUTO-PURGE':
                 auto_purge_found = True
 
-            SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+            SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp,install_base=install_base, temp_base=temp_base,project_name=project_name)
 
         else:
             if currentSection == 'EnvVarValues':
@@ -836,19 +880,19 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     #  This logic needs to be called from inside loop ( on section change)  and here too
     previousSection=currentSection # When Section changes, save off the previousSection name. 
     currentSection='End of file'
-    SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+    SectionChangeLogic(previousSection=previousSection, amendedEnvVars=amendedEnvVars, f_temp=f_temp, install_base=install_base, temp_base=temp_base,project_name=project_name)
 
     ## If EnvVarValues didnt exist at start , we need to add it on.
     if env_var_values_found == False:
         section_change_line='[EnvVarValues]\n'
         f_temp.write(section_change_line)
-        SectionChangeLogic(previousSection='EnvVarValues', amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+        SectionChangeLogic(previousSection='EnvVarValues', amendedEnvVars=amendedEnvVars, f_temp=f_temp,install_base=install_base, temp_base=temp_base,project_name=project_name)
 
     ## If AUTO-PURGE didnt exist at start , we need to add it on.
     if auto_purge_found == False:
         section_change_line='[AUTO-PURGE]\n'
         f_temp.write(section_change_line)
-        SectionChangeLogic(previousSection='AUTO-PURGE', amendedEnvVars=amendedEnvVars, f_temp=f_temp)
+        SectionChangeLogic(previousSection='AUTO-PURGE', amendedEnvVars=amendedEnvVars, f_temp=f_temp,install_base=install_base, temp_base=temp_base,project_name=project_name)
     
     
 
@@ -959,6 +1003,14 @@ def main(arrgv=None):
         errorfound=True
         logMessage.info('Project specific DSParams file not found at: ' + args.project_specific_params_file)
 
+    if not os.path.exists(args.install_base):
+        
+        logMessage.warning('Install base does not existat: ' + args.install_base)
+    
+    if not os.path.exists(args.temp_base):
+        
+        logMessage.warning('Temp base does not existat: ' + args.temp_base)
+
     if errorfound:
         sys.exit("\nInput parameter failed validation. See previous messages.\n")
 
@@ -969,10 +1021,12 @@ def main(arrgv=None):
 
     logMessage.info('logfile is :' + args.logfile)
     logMessage.info('install_base is :' + args.install_base )
+    logMessage.info('temp_base is :' + args.temp_base )
     logMessage.info('template_dsparam is :' + args.template_dsparam) 
     logMessage.info('project_list is :' + str(args.project_list) )
     logMessage.info('standard params file is : ' + args.standard_params_file)
     logMessage.info('project specific params file is : ' + args.project_specific_params_file)
+        
 
 
     # Check you will have permissions to change the files as required
@@ -1042,7 +1096,7 @@ def main(arrgv=None):
             logMessage.warning('Unable to find DSParams file ' + dsparams_path + '. A new file will be created.') 
         
         ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
-        CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings )
+        CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings, install_base=args.install_base, temp_base=args.temp_base, project_name=project )
         
 
         
