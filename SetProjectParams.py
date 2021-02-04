@@ -396,7 +396,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
             ## Look for the variable in the EnvVar object
             envvar_name=variable_definition['EnvVarName']
             if envvar_name in myTemplateEnvVar:
-                logMessage.info(envvar_name + ' exists in myTemplateEnvVar')
+                logMessage.debug(envvar_name + ' exists in myTemplateEnvVar')
                 # Copy it to my output env var - nb. This is just creating new obj referencing the original..so updates will be seen in both! ( This should not matter though, in current process)
                 myOutputEnvVar_ToApply[envvar_name]=myTemplateEnvVar[envvar_name]
 
@@ -492,7 +492,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
         """
         myOutputProjectSettingsToApply=origProjectSettings
         for setting, value in project_settings_to_update.items():
-            logMessage.info('Processing ' + setting + ' ' + str(value))
+            logMessage.debug('Processing ' + setting + ' ' + str(value))
             myOutputProjectSettingsToApply[setting]=value
 
         
@@ -502,7 +502,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
 
         myOutput=origAutoPurge
         for setting, value in autopurge_settings_to_update.items():
-            logMessage.info('Processing ' + setting + ' ' + str(value))
+            logMessage.debug('Processing ' + setting + ' ' + str(value))
             myOutput[setting]=value
         
         return myOutput
@@ -1077,8 +1077,11 @@ def main(arrgv=None):
     
     import os 
     dsadm_user=GetDSAdminName(version_xml=version_xml)
+    counter=1
     
     for project in project_list:
+
+        logMessage.info( 'Processing project ' + str(counter) + ' of ' + str(len(project_list)) + '. Project Name: ' + project )
      
         
         from datastage_functions import GetProjectPath
@@ -1097,6 +1100,8 @@ def main(arrgv=None):
         
         ## Maybe I should have one object for standard settings, and one for project specific settings instead here. 
         CheckFixDSParams(version_xml=version_xml,  dsparams_path=dsparams_path, templateDSParamsPath=args.template_dsparam,  standard_params=standard_params, standard_project_settings=standard_project_settings, standard_autopurge_settings=standard_autopurge_settings, project_specific_params=project_specific_params ,project_specific_project_settings=project_specific_project_settings, project_specific_autopurge_settings=project_specific_autopurge_settings, install_base=args.install_base, temp_base=args.temp_base, project_name=project )
+
+        counter+=1
         
 
         
