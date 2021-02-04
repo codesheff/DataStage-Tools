@@ -278,6 +278,17 @@ def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\
         ProjectValues[envProjectVarName] = envProjectVarValue  #Could setup a class for this again, but I've just done as string for now as its just a simple Name=value
 
     AutoPurgeValues={}
+    sectionStartPattern=r'^\[AUTO-PURGE\] *'
+    sectionEndPattern=r'^\[.*\] *'    ## or end of file
+    #pattern_toMatch=r'^(\w*)\\User Defined\\.*$'
+    AutoPurge_lines=GetLinesFromDSParam(filePath,sectionStartPattern, sectionEndPattern )
+    for line in AutoPurge_lines:
+        #envVarNameQuoted, not_required, envVarValue = line.split('\\')[0]
+        ## PXDeployJobDirectoryTemplate=value
+        autoPurgeNameQuoted = line.split('=')[0]
+        autoPurgeValue = line.split('=')[1]
+        autoPurgeName = autoPurgeNameQuoted.replace('"','')
+        AutoPurgeValues[autoPurgeName] = autoPurgeValue  #Could setup a class for this again, but I've just done as string for now as its just a simple Name=value
 
 
 
@@ -907,21 +918,28 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
                 if currentSection == 'PROJECT' :
                     format=ProjectSettingFormat
                     amendedDictionary=amendedProjectSettings ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
-                elif currentSection == 'AUTO-PURGE':
-                    format=AutoPurgeFormat
-                    amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
+
+                ## Don't process the AUTO-PURGE lines here, do them all as once in the SectionChange Logic. 
+                #elif currentSection == 'AUTO-PURGE':
+                #    format=AutoPurgeFormat
+                #    amendedDictionary=amendedAutoPurge ### This needs to just be an alias to the real dictionary, as we want to pop items out of it.
                 
-                result = re.search(format, line)
-                if result != None:
-                    setting=result[1]
-                    # not required.value=result[2]
-                    # Check if the variable is included in our variables that are to be amended.
-                    if setting in amendedDictionary:
-                        line=setting + '=' + amendedDictionary[setting] + '\n'
-                        #amendedProjectSettings[setting] = None # remove it , so we know not to add it on at the end.
-                        amendedDictionary.pop(setting)  #remove it , so we know not to add it on at the end.
+                    result = re.search(format, line)
+                    if result != None:
+                        setting=result[1]
+                        # not required.value=result[2]
+                        # Check if the variable is included in our variables that are to be amended.
+                        if setting in amendedDictionary:
+                            line=setting + '=' + str(amendedDictionary[setting]) + '\n'
+                            #amendedProjectSettings[setting] = None # remove it , so we know not to add it on at the end.
+                            amendedDictionary.pop(setting)  #remove it , so we know not to add it on at the end.
+                    else:
+                        logMessage.warning("We're in PROJECT section, but line does not match the expected format. Line is :" + line)
+                
                 else:
-                    logMessage.warning("We're in PROJECT section, but line does not match the expected format. Line is :" + line)
+                    logMessage.debug("We're in AUTO-PURGE section, but no need to do anything in this function")
+                    # Continue to process next line, without writing this one.. (all AUTO-PURGE writes will be done in the Section Change logic, so that we can do the validation on the section as a whole.)
+                    continue
                 
 
         

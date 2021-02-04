@@ -461,3 +461,6 @@ PXDeployJobDirectoryTemplate=
 PXDeployCustomAction=
 [InternalSettings]
 DisableParSCCheck=0
+[AUTO-PURGE]
+PurgeEnabled=1
+DaysOld=3
