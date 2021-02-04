@@ -463,7 +463,7 @@ def GetAmendedEnvVars(origEnvVar={},origProjectSettings={}, origAutoPurge={},  t
                                             Default='', 
                                             SetAction='0', 
                                             Scope='Project', 
-                                            PromptText=varPromptText, HelpText='hello')
+                                            PromptText=varPromptText, HelpText='')
 
                 # Now update  myEnvVar with the value and definition                    
                 myOutputEnvVar_ToApply[envvar_name]=EnvVar(EnvVarName=envvar_name, EnvVarDefn= myEnvVarDefn, EnvVarValue=myEnvVarValue)
@@ -914,10 +914,10 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
 def main(arrgv=None):
     ##  Main line
 
-    ## This script has been coded with 3.7.
+    ## This script has been coded with 3.7., but I stuck im a workaround for 3.6
     import sys
-    if sys.version_info < (3,7):
-        sys.exit("\nThis script requires python 3.7 or higher.\n")
+    if sys.version_info < (3,6):
+        sys.exit("\nThis script requires python 3.6 or higher.\n") 
 
 
 

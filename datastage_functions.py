@@ -130,8 +130,12 @@ def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/
         command_to_run = sudo_command
     
     
-    #result = subprocess.run([sudo_command] , env=my_env, capture_output=True, shell=True)
-    result = subprocess.run([command_to_run] , capture_output=True, shell=True, encoding="UTF-8")
+    ## Annoying
+    import sys
+    if sys.version_info >= (3,7):
+        result = subprocess.run([command_to_run] , capture_output=True, shell=True, encoding="UTF-8")
+    else: 
+        result = subprocess.run([command_to_run] , shell=True, encoding="UTF-8", stdout=subprocess.PIPE)
 
 
 
