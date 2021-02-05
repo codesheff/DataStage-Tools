@@ -61,14 +61,14 @@ def main():
     args = HandleInputParameters()
     #args = parser.parse_args()
 
-    global logMessage # Make it available to all 
-    from general_functions import LogMessage
-    logMessage=LogMessage(args.logfile)
+    from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
+    global logMessage
+    logMessage=LogMessage()
 
+    setLogFile(args.logfile)
     logMessage.info("Starting the compile script.")
 
-    from general_functions import SayHi
-    print(SayHi())
+    
 
 
     #url='https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi?api=compileDSJob&jobName=Job_2&projectName=dstage1&hostName=HN01&getFullOutput=false&apiVersion=3.0'
@@ -79,6 +79,8 @@ def main():
     user=args.user
     password=args.password
 
+    
+
 
     #def compileJob(url='https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi', parameters={"api": "compileDSJob", "jobName": "Job_1", "projectName" : "dstage1" , "hostName" : 'HN01', "getFullOutput" : "False", "apiVersion" : "3.0"} )
     # Do as multiple requests in one session, so only needs to authenticate once.
@@ -86,6 +88,8 @@ def main():
     
     import requests
     from requests.auth import HTTPBasicAuth 
+
+    #response = requests.get('https://127.0.0.1:9443/ibm/iis/api/dscdesignerapi', params={"api": "compileDSJob", "jobName": "Job_1", "projectName" : args.projectName , "hostName" : args.hostName , "getFullOutput" : "False", "apiVersion" : "3.0"}, auth = HTTPBasicAuth(user,password),verify=False ) 
 
  
     
@@ -102,7 +106,7 @@ def main():
 
         for job in jobs:
             p["jobName"] = job
-            
+                
 
 
             try:
