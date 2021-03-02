@@ -7,12 +7,14 @@ This can be used to help give a standard behaviour to all our scripts.
 
    #import MyLogging.mylogging 
 from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
+import os 
 global logMessage
 logMessage=LogMessage()
 
     #test = getLogFile()
 if getLogFile() is None:
-    setLogFile('/tmp/logs/stetest_general_functions.log')
+    setLogFile(os.path.join(os.sep,'tmp','logs','stetest_general_functions.log'))
+    
 
 
 
@@ -34,7 +36,7 @@ def MakeALogFileName():
     import getpass
     current_user=getpass.getuser()
 
-    logfile=os.path.join('/tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
+    logfile=os.path.join(os.sep,'tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
 
     return logfile
 
@@ -138,7 +140,7 @@ class LogMessage_donotuse():
         import getpass
         current_user=getpass.getuser()
 
-        logfile=os.path.join('/tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
+        logfile=os.path.join(os.sep,'tmp','ds_logging', current_user + '_' +  os.path.splitext(top_level_program)[0] + '.log')
 
 
         ## Should I find callling name, by looping through until I find 'main'?
