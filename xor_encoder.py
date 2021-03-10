@@ -70,9 +70,6 @@ def HandleInputParameters():
     
 
 
-
-
-
 def main():
     
     parser=HandleInputParameters()
@@ -87,15 +84,6 @@ def main():
         print(xor_decode( args.input_text) )
     else:
         sys.exit("\n Unhandled request.\n") 
-
-
-    #print(args)
-
-    #print('Encoding "WebAs"')
-    #print(xor_encode('WebAs') )
-
-    #print('Decoding "{xor}CDo9Hiw=" ')
-    #print(xor_decode('{xor}CDo9Hiw='))
 
 
 if __name__=="__main__":
