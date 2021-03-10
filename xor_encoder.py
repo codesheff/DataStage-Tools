@@ -11,9 +11,9 @@ def xor_encode(secret_text):
     xor_byte_array=bytearray([])
     for char in secret_text:
         decimalOfChar=ord(char)
-        decimalOfUnderScode=ord('_')
+        decimalOfUnderScore=ord('_')
 
-        xor_value = decimalOfChar ^ decimalOfUnderScode
+        xor_value = decimalOfChar ^ decimalOfUnderScore
         xor_byte_array.append(xor_value)
    
     ## use base64 to encode it, and then decode those bytes as ascii  
@@ -42,9 +42,9 @@ def xor_decode(encoded_text):
 
     ## Now do the xor with the underscore on each byte
     decoded_text_byte_array=bytearray([])
-    decimalOfUnderScode=ord('_')
+    decimalOfUnderScore=ord('_')
     for byte in decoded_bytes:
-        xored_byte = byte ^ decimalOfUnderScode
+        xored_byte = byte ^ decimalOfUnderScore
         decoded_text_byte_array.append(xored_byte)
 
     ## convert the bytes to string using ascii
@@ -55,7 +55,7 @@ def HandleInputParameters():
 
     import os
     import argparse
-    # read this, and look at mutually exclusive arrgs  https://linuxconfig.org/how-to-use-argparse-to-parse-python-scripts-parameters
+    # To read, and look at mutually exclusive arrgs  https://linuxconfig.org/how-to-use-argparse-to-parse-python-scripts-parameters
     
     # Create top level parser
     parser = argparse.ArgumentParser()
