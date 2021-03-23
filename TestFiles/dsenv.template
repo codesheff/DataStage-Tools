@@ -1,0 +1,93 @@
+#!/bin/sh
+####################################################################
+#
+# dsenv - DataStage environment file
+#
+#	Licensed Materials - Property of IBM (c) Copyright IBM Corp. 1997, 2019 All Rights Reserved.
+#	This is unpublished proprietary source code of IBM Corporation
+#	The copyright notice above does not evidence any actual or
+#	intended publication of such source code.
+#
+# This script is sourced by the DataStage dsrpcd daemon to establish 
+# proper environment settings for DataStage client connections.
+#
+# This script may also be sourced by bourne shells to establish 
+# proper environment settings for local DataStage use.
+#
+####################################################################
+
+# PLATFORM SPECIFIC SECTION
+
+set +u
+
+if [ -z "$DSHOME" ] && [ -f "/.dshome" ]
+then
+	DSHOME=`cat /.dshome`
+	export DSHOME
+fi
+
+if [ -z "$DSHOME" ]
+then
+DSHOME=/iis/01/InformationServer/Server/DSEngine; export DSHOME
+fi
+
+DS_HOSTNAME_ALIAS=hn01;export DS_HOSTNAME_ALIAS
+APT_PM_CONDUCTOR_HOSTNAME=hn01; export APT_PM_CONDUCTOR_HOSTNAME
+
+if [ -z "$DSRPCD_PORT_NUMBER" ]
+then
+	true
+DSRPCD_PORT_NUMBER=31538; export DSRPCD_PORT_NUMBER
+fi
+
+if [ -z "$APT_ORCHHOME" ]
+then
+APT_ORCHHOME=/iis/01/InformationServer/Server/PXEngine; export APT_ORCHHOME
+fi
+
+#if [ -z "$UDTHOME" ]
+#then
+UDTHOME=/iis/01/InformationServer/Server/DSEngine/ud41 ; export UDTHOME
+UDTBIN=/iis/01/InformationServer/Server/DSEngine/ud41/bin ; export UDTBIN
+#fi
+
+#if [ -z "$ASBHOME" ] && [ -f "$DSHOME/.asbnode" ]
+#then
+	ASBHOME=`cat $DSHOME/.asbnode`
+	export ASBHOME
+#fi
+
+#if [ -z "$ASBHOME" ]
+#then
+	#ASBHOME=`dirname \`dirname $DSHOME\``/ASBNode
+	#export ASBHOME
+#fi
+
+#if [ -z "$ISHOME" ]
+#then
+	ISHOME=`dirname $ASBHOME`
+	export ISHOME
+#fi
+
+if [ -n "$DSHOME" ] && [ -d "$DSHOME" ]
+then
+	ODBCINI=$DSHOME/.odbc.ini; export ODBCINI
+	HOME=${HOME:-/}; export HOME
+	
+	#LANG="<langdef>";export LANG
+	#LC_ALL="<langdef>";export LC_ALL
+	#LC_CTYPE="<langdef>";export LC_CTYPE
+	#LC_COLLATE="<langdef>";export LC_COLLATE
+	#LC_MONETARY="<langdef>";export LC_MONETARY
+	#LC_NUMERIC="<langdef>";export LC_NUMERIC
+	#LC_TIME="<langdef>";export LC_TIME
+	#LC_MESSAGES="<langdef>"; export LC_MESSAGES
+	
+	LD_LIBRARY_PATH=`dirname $DSHOME`/biginsights/IHC/c++/Linux-amd64-64/lib:`dirname $DSHOME`/branded_odbc/lib:`dirname $DSHOME`/DSComponents/lib:`dirname $DSHOME`/DSComponents/bin:$DSHOME/lib:$DSHOME/uvdlls:`dirname $DSHOME`/PXEngine/lib:$ISHOME/jdk/jre/lib/amd64/j9vm:$ISHOME/jdk/jre/lib/amd64:$ASBHOME/lib/cpp:$ASBHOME/apps/proxy/cpp/linux-all-x86_64:/iis/01/db2/lib64:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH
+
+
+fi
+
+DB2INSTANCE=db2inst1; export DB2INSTANCE
+DB2INSTDEF=db2inst1; export DB2INSTDEF
