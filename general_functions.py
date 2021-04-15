@@ -5,7 +5,7 @@ This will be used to store functions that are generally of use in our scripting.
 This can be used to help give a standard behaviour to all our scripts.
 """
 
-   #import MyLogging.mylogging 
+#import MyLogging.mylogging 
 from MyLogging.mylogging  import getLogFile, setLogFile, LogMessage
 import os 
 global logMessage
