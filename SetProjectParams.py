@@ -1079,11 +1079,11 @@ def main(arrgv=None):
 
     if not os.path.exists(args.install_base):
         
-        logMessage.warning('Install base does not existat: ' + args.install_base)
+        logMessage.warning('Install base does not exist at: ' + args.install_base)
     
     if not os.path.exists(args.temp_base):
         
-        logMessage.warning('Temp base does not existat: ' + args.temp_base)
+        logMessage.warning('Temp base does not exist at: ' + args.temp_base)
 
     if errorfound:
         sys.exit("\nInput parameter failed validation. See previous messages.\n")
