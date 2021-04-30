@@ -246,7 +246,7 @@ def GetListOfComponentsRecentlyModified(modified_since, xmeta_user='db2inst1', x
     """
 
     if modified_since is not None:
-        where_clause+=' and XMETA_MODIFICATION_TIMESTAMP_XMETA >= ' + str(modified_since.timestamp() * 1000 )
+        where_clause+=' and t2.XMETA_MODIFICATION_TIMESTAMP_XMETA >= ' + str(modified_since.timestamp() * 1000 )
         
 
     

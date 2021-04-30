@@ -46,23 +46,6 @@ def HandleInputParameters():
 
 
 
-def db2_results_not_used(command):
-    from ibm_db import fetch_assoc
-
-    ret = []
-    result = fetch_assoc(command)
-    while result:
-        # This builds a list in memory. Theoretically, if there's a lot of rows,
-        # we could run out of memory. In practice, I've never had that happen.
-        # If it's ever a problem, you could use
-        #     yield result
-        # Then this function would become a generator. You lose the ability to access
-        # results by index or slice them or whatever, but you retain
-        # the ability to iterate on them.
-        ret.append(result)
-        result = fetch_assoc(command)
-    return ret  # Ditch this line if you choose to use a generator.
-
 
   
 
@@ -141,7 +124,86 @@ def main(arrgv=None):
     #import datastage_functions 
     from datastage_functions import GetListOfComponentsRecentlyModified
     
-    GetListOfComponentsRecentlyModified(modified_since=args.modified_since_timestamp)
+    components_list=GetListOfComponentsRecentlyModified(modified_since=args.modified_since_timestamp)
+
+    #from datetime import datetime
+    import datetime 
+    components_list_test={
+        ('HN01', 'dstage1'): [
+            ('JobDefn', 'ExternalSource', datetime.datetime(2021, 1, 7, 17, 21, 34, 685000, tzinfo=datetime.timezone.utc), '\\\\Jobs'), 
+            ('JobDefn', 'RunCommand2', datetime.datetime(2021, 4, 6, 12, 0, 48, 589000, tzinfo=datetime.timezone.utc), '\\\\Jobs'), 
+            ('JobDefn', 'RunCommand3', datetime.datetime(2021, 4, 8, 16, 4, 20, 516000, tzinfo=datetime.timezone.utc), '\\\\Jobs'), 
+            ('JobDefn', 'RunCommand4', datetime.datetime(2021, 4, 9, 15, 11, 28, 998000, tzinfo=datetime.timezone.utc), '\\\\SteTest'), 
+            ('JobDefn', 'RunCommand5', datetime.datetime(2021, 4, 15, 16, 28, 9, 708000, tzinfo=datetime.timezone.utc), '\\\\SteTest\\\\SubFolder1')]
+        }
+
+    #components_list=components_list_test
+
+    print(components_list)
+
+    def ExportComponentList(export_base_dir='/var/repo_base/default', components_list={}):
+
+        import os
+        import re
+
+
+        for project_namespace_tuple, job_details in components_list.items():
+            engine_host=project_namespace_tuple[0]
+            project=project_namespace_tuple[1]
+            logMessage.info('Exporting Jobs from ' + engine_host + ':/' + project ) 
+
+            for job_info in job_details:
+                logMessage.info('Exporting Jobs ' + job_info[3]  ) 
+
+                #Create path for archive file
+                
+                component_name=job_info[1]
+                category=re.sub(r"\\\\",os.sep,job_info[3])   # Convert to using os.sep ('/')
+                category_path=re.sub(r"^"+os.sep,'',category) # Remove the leading '/'
+                archive_dir_path=os.path.join(export_base_dir,project,category_path,component_name)
+
+                if ( not(os.path.exists(archive_dir_path))):
+                    os.makedirs(archive_dir_path,0o755)
+
+                archive_file=component_name + '.isx'
+
+                archive_path=os.path.join(archive_dir_path, archive_file)
+
+
+                # Export the job
+                import subprocess   
+                
+                ds_pattern=engine_host + '/' + project + '/' + '*'  + '/'+ component_name + '.*'
+                command_to_run_old='/iis/01/InformationServer/Clients/istools/cli/istool.sh export -archive ' + archive_path + ' -up -ds "hn01/dstage1/*/'+component_name + '.*" -u isadmin -p default;'
+                command_to_run='/iis/01/InformationServer/Clients/istools/cli/istool.sh export -archive ' + archive_path + ' -up -ds "' +ds_pattern + '" -u isadmin -p default;'
+    
+                ## Annoying
+                import sys
+                if sys.version_info >= (3,7):
+                    result = subprocess.run([command_to_run] , capture_output=True, shell=True, encoding="UTF-8")
+                else: 
+                    result = subprocess.run([command_to_run] , shell=True, encoding="UTF-8", stdout=subprocess.PIPE)
+                
+                if result.returncode != 0:
+                    logMessage.warning('Export of ' + component_name + ' ended with return code ' + str(result.returncode) + '. stdout : ' + result.stdout + '. stderr: ' + result.stderr )
+                else:
+                    logMessage.debug('Export of ' + component_name + ' ended with return code ' + str(result.returncode) + '. stdout : ' + result.stdout + '. stderr: ' + result.stderr )
+                    
+
+      
+
+
+                
+            
+
+        logMessage.info('Done')
+
+    
+    ExportComponentList(export_base_dir='/var/git/test1_repo/code_sheff/DataStageJobsTest1', components_list=components_list)
+    logMessage.info('Done')
+
+
+
 
 
 
