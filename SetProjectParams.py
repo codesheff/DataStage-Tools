@@ -842,7 +842,7 @@ def CheckFixDSParams(version_xml='/iis/test/InformationServer/Version.xml', dspa
     try:
         f_temp = open(fp.name,'w')
     except OSError:
-        logMessage.error('Unable to open the temp file :' + f_temp )
+        logMessage.error('Unable to open the temp file :' + fp.name )
         return None
  
     ##  Read each line from template file, and do processing depending on what section of the file we're in.
