@@ -2,6 +2,7 @@
 
 
 ## I don't know how to do this.. some reading needed first 
+## Can I setup the logMessage here , and make it available for fuctions in the script to be tested to use?
 
 import unittest
 
@@ -34,8 +35,10 @@ class TestPassUserAndPasswordArgs(unittest.TestCase):
 
 
         global logMessage # Make it available to all 
-        from general_functions import LogMessage
-        logMessage=LogMessage(args.logfile)
+        from general_functions import LogMessage, getLogFile, setLogFile
+        #logMessage=LogMessage(args.logfile)
+        logMessage=LogMessage()  
+        setLogFile(args.logfile)
 
 
         from SetProjectParams import GetAmendedEnvVars, GetProjectParamConfig
@@ -53,8 +56,14 @@ class TestPassUserAndPasswordArgs(unittest.TestCase):
         
         templateDSParamsPath=args.template_dsparam
         standard_params=GetProjectParamConfig(args.standard_params_file)
+        standard_project_settings={}
+        standard_autopurge_settings={}
+        install_base=args.install_base
+        temp_base='/tmp'
+        project_name=str(args.project_list[0])
 
-        amendedEnvVars=GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
+        #amendedEnvVars=GetAmendedEnvVars(origEnvVar={}, templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params)
+        amendedEnvVars,amendedProjectSettings, amendedAutoPurge =GetAmendedEnvVars(origEnvVar={},            origProjectSettings={},                    origAutoPurge={},               templateDSParamsPath=templateDSParamsPath , params_to_update=standard_params, project_settings_to_update=standard_project_settings, autopurge_settings_to_update=standard_autopurge_settings, install_base=install_base, temp_base=temp_base, project_name=project_name)
         #ds_login_args = Credentials.add_login_args().parse_args()
         #ds_login_args.funct_getlogon(ds_login_args)
         
