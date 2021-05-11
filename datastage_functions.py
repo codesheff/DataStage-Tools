@@ -130,10 +130,17 @@ def GetProjectPath(project_name='dstage1',dsadm_user='dsadm', dshome='/iis/test/
 
     import getpass
     current_user=getpass.getuser()
+
+    version_xml=os.path.join(os.path.dirname(os.path.dirname(dshome)),'Version.xml')
+    #import GetValuesFromVersionXML
+    dsrpc_port=GetValueFromVersionXML(VersionXMLPath=version_xml, VariableName='dsrpc.port')
+
+
+
     
     dsenv=os.path.join(dshome,'dsenv')
     dsjobcommand=os.path.join(dshome,'bin/dsjob')
-    command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -projectinfo ' + project_name
+    command='source ' + dsenv + ' ; ' +  dsjobcommand + ' -server :'  + dsrpc_port + ' -projectinfo ' + project_name
     sudo_command='sudo -u ' + dsadm_user + ' -s sh -c "' + command + ' | grep \'^Project Path\'"'
 
     if current_user == dsadm_user:
