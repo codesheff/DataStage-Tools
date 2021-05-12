@@ -38,7 +38,7 @@ class TestPassUserAndPasswordArgs(unittest.TestCase):
         from general_functions import LogMessage, getLogFile, setLogFile
         #logMessage=LogMessage(args.logfile)
         logMessage=LogMessage()  
-        setLogFile(args.logfile)
+        logMessage.setLogFile(args.logfile)
 
 
         from SetProjectParams import GetAmendedEnvVars, GetProjectParamConfig

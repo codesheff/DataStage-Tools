@@ -29,7 +29,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            //"args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
+            "args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
             //"args": ["--install-base", "/iis/01", "--since-timestamp", "2021-04-08 01:45:21"]
 
         },
