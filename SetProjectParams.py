@@ -154,36 +154,36 @@ def GetLinesFromDSParam(filePath='',sectionStartPattern=r'^\[EnvVarDefns\] *',se
     """
 
     try:
-        f = open(filePath)
-    except OSError:
-        return None
+        with open(filePath) as f:
+    
+            return_lines=[]
+            sectionFound=False
 
-
-    return_lines=[]
-    sectionFound=False
-
-    for line in f:
-        # We are only interested in the section '[EnvVarDefns]'
-        # If you find the start of the section, then set sectionFound to True, and continue processesing from next line
-        if re.search(sectionStartPattern,line):
-            sectionFound=True
-            continue
-        
-        # If you get to the end of the section, stop processing
-        if sectionFound == True:
-            if re.search(sectionEndPattern,line):
-                break
-            else:           
-                #Skip through until you get to lines that match your pattern
-                if re.search(pattern_toMatch, line) == None:
+            for line in f:
+                # We are only interested in the section '[EnvVarDefns]'
+                # If you find the start of the section, then set sectionFound to True, and continue processesing from next line
+                if re.search(sectionStartPattern,line):
+                    sectionFound=True
                     continue
+        
+                # If you get to the end of the section, stop processing
+                if sectionFound == True:
+                    if re.search(sectionEndPattern,line):
+                        break
+                    else:           
+                        #Skip through until you get to lines that match your pattern
+                        if re.search(pattern_toMatch, line) == None:
+                            continue
 
             
-            # This is if its EnvVarDefn that we're getting.
-            return_lines.append(line)
+                    # This is if its EnvVarDefn that we're getting.
+                    return_lines.append(line)
     
-    f.close
-    return(return_lines)
+            f.close
+            return(return_lines)
+
+    except OSError:
+        return None
 
 def GetDSParamValues(filePath='',sectionName='EnvVarDefns',pattern_toMatch=r'^(\w*)\\User Defined\\.*$'):
     """
@@ -1061,6 +1061,7 @@ def main(arrgv=None):
     #test = getLogFile()
     #if getLogFile() is None:
     setLogFile(args.logfile)
+    logMessage.setLogFile(args.logfile)
 
     
     #Check input params
@@ -1179,7 +1180,16 @@ def main(arrgv=None):
         
 
         
-    
+## if logMessage does not exist, create it with default logfile path
+## I've put these here in an attempt to make logMessage available in functions even if we call them directly without calling the full script.
+##  ( will be useful for unit testing the functions)
+try: 
+    logMessage.debug('Entered SetProjectParams.py')
+except NameError:
+    from general_functions import LogMessage
+    logMessage=LogMessage()
+    logMessage.debug('Entered SetProjectParams.py')
+    #setLogFile(args.logfile) 
 
 if __name__=="__main__":
     main()
