@@ -25,6 +25,7 @@ def HandleInputParameters():
     
     #default_logfile=os.path.join(datadir,"default_log_file.txt")
     from general_functions import MakeALogFileName
+    
     default_logfile=MakeALogFileName()
     
 
