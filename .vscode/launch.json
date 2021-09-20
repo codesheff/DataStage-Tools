@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: Current File",
             "type": "python",
@@ -35,6 +36,20 @@
             "console": "integratedTerminal",
             "args": ["--input-text", "WebAs", "--encode"]
 
-        }
+        },
+        {
+            "name": "Python: SetProjectParams.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
+            //"args": ["--install-base", "/iis/01", "--since-timestamp", "2021-04-08 01:45:21"]
+            //"args": ["--serviceTierHostName" , "hn01",
+            //            "--hostName" , "hn01" ,
+            //           "--projectName" , "dstage1"
+            //            ,"--ds-user USER", "dsadmin", "--ds-password", "some_password"] 
+
+        },
     ]
 }

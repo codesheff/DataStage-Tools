@@ -186,6 +186,10 @@ def GetListOfComponentsRecentlyModified(modified_since, xmeta_user='db2inst1', x
     # https://www.ibm.com/docs/en/db2/9.7?topic=db-fetching-rows-columns-from-result-sets
     #https://stackoverflow.com/questions/6044326/how-to-connect-python-to-db2
 
+    ## might need rh-python36-python-devel.x86_64 to be able to run this - nope that didn't help/
+    ## maybe need some optional repos? yum install python3-devel.x86_64 --enablerepo=rhel-7-server-optional-rpms
+    ## Yep, that sorted it. yum install python3-devel.x86_64 --enablerepo=rhel-7-server-optional-rpms
+
     #from ibm_db import connect, exec_immediate  
 
     database='XMETA'
