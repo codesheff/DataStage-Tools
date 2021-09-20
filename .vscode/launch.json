@@ -12,7 +12,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             //"args": ["--install-base", "/iis/01", "--project-name" ,"dstage1"]
-            //"args": ["--install-base", "/iis/01", "--since-timestamp", "2021-04-08 01:45:21"]
+            "args": ["--install-base", "/iis/01", "--since-timestamp", "2021-04-08 01:45:21"]
             //"args": ["--serviceTierHostName" , "hn01",
             //            "--hostName" , "hn01" ,
             //           "--projectName" , "dstage1"

@@ -188,7 +188,7 @@ def main(arrgv=None):
                 if result.returncode != 0:
                     logMessage.warning('Export of ' + component_name + ' ended with return code ' + str(result.returncode) + '. stdout : ' + result.stdout + '. stderr: ' + result.stderr )
                 else:
-                    logMessage.debug('Export of ' + component_name + ' ended with return code ' + str(result.returncode) + '. stdout : ' + result.stdout + '. stderr: ' + result.stderr )
+                    logMessage.debug('Export of ' + component_name + ' ended with return code ' + str(result.returncode) + '. stdout : ' + result.stdout + '. stderr: ' + str(result.stderr) )
                     
 
       
@@ -197,7 +197,7 @@ def main(arrgv=None):
                 
             
 
-        logMessage.info('Done')
+        logMessage.info('Export to ' +  archive_path + ' finished .')
 
     
     ExportComponentList(export_base_dir='/var/git/test1_repo/code_sheff/DataStageJobsTest1', components_list=components_list)
